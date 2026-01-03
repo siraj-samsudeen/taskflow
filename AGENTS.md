@@ -56,3 +56,36 @@ Me: "go" / "do step 1" / "skip the checkbox"
 ```
 
 I stay in control. I react to what I see. We iterate.
+
+---
+
+### Micro-step rules
+
+**IMPORTANT: Always work in micro-steps. Never bundle multiple changes into one step.**
+
+- Each step should be ONE tiny change (add text, add style, add input, wire state...)
+- Show git-style diffs, not full file contents
+- Start without styles, add styling as separate step
+- "n" = next, proceed without confirmation
+- Brief explanation after each diff (1-3 lines)
+- Treat me as a beginner returning to React
+
+**Example - building a login screen:**
+
+```
+Step 1: Create screen with just "TaskFlow" text (no styles)
+Step 2: Add styles to center the text
+Step 3: Add email input field
+Step 4: Add password input field  
+Step 5: Add login button
+Step 6: Wire up state for inputs
+Step 7: Make button log values (to test)
+Step 8: Connect to Supabase auth
+Step 9: Add error handling
+Step 10: Add validation
+```
+
+**NOT like this (too much at once):**
+```
+Step 1: Create complete login screen with inputs, button, styles, state, validation, and auth
+```

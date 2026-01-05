@@ -89,3 +89,6 @@ Step 10: Add validation
 ```
 Step 1: Create complete login screen with inputs, button, styles, state, validation, and auth
 ```
+
+## Learnings
+- use `npx expo install` to install the compatible versions of libraries

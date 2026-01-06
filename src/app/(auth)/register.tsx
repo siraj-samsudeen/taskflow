@@ -38,8 +38,6 @@ export default function RegisterScreen() {
       password,
     });
 
-    console.log('signUp response:', { data, error });
-
     if (error) {
       showError(error.message);
     } else {

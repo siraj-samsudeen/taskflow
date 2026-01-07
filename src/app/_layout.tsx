@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 
 export default function RootLayout() {
   const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const segments = useSegments();
 
@@ -13,12 +14,16 @@ export default function RootLayout() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
+      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
+    // Wait for auth state before redirecting to prevent flash redirect on app load
+    if (isLoading) return;
+
     const inAuthGroup = segments[0] === '(auth)';
 
     if (session && inAuthGroup) {
@@ -26,7 +31,7 @@ export default function RootLayout() {
     } else if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
     }
-  }, [session, segments]);
+  }, [session, segments, isLoading]);
 
   return <Slot />;
 }

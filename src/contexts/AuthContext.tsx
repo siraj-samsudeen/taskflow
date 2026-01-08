@@ -1,5 +1,5 @@
-import { AuthChangeEvent, AuthError, Session, User } from '@supabase/supabase-js';
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import type { AuthChangeEvent, AuthError, Session, User } from '@supabase/supabase-js';
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 
 import { supabase } from '../lib/supabase';
 
@@ -21,7 +21,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authEvent, setAuthEvent] = useState<AuthChangeEvent | null>(null);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setAuthEvent(event);
       setSession(session);
       setIsLoading(false);

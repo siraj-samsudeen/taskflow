@@ -67,10 +67,7 @@ export default function ForgotPasswordScreen() {
         >
           <Text style={styles.buttonText}>{isLoading ? 'Sending...' : 'Send Reset Link'}</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.linkContainer}
-          onPress={() => router.push('/(auth)/login')}
-        >
+        <TouchableOpacity style={styles.linkContainer} onPress={() => router.push('/(auth)/login')}>
           <Text style={styles.linkText}>Back to Login</Text>
         </TouchableOpacity>
       </View>

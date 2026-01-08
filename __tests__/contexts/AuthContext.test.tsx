@@ -1,9 +1,13 @@
 import { renderHook } from '@testing-library/react-native';
-import React from 'react';
+import type React from 'react';
 
 import { AuthProvider, useAuth } from '../../src/contexts/AuthContext';
 import { supabase } from '../../src/lib/supabase';
-import { createAuthSubscription, setupAuthStateChangeMock, triggerAuthEvent } from '../utils/auth-mocks';
+import {
+  createAuthSubscription,
+  setupAuthStateChangeMock,
+  triggerAuthEvent,
+} from '../utils/auth-mocks';
 
 jest.mock('../../src/lib/supabase');
 
@@ -17,7 +21,7 @@ describe('AuthContext', () => {
 
   it('throws error when useAuth is used outside AuthProvider', () => {
     expect(() => renderHook(() => useAuth())).toThrow(
-      'useAuth must be used within an AuthProvider'
+      'useAuth must be used within an AuthProvider',
     );
   });
 

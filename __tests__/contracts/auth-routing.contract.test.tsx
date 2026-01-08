@@ -27,39 +27,32 @@ describe('Auth Routing Contract', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.mocked(useRouter).mockReturnValue({ replace: mockReplace });
+    jest.mocked(useRouter).mockReturnValue({ replace: mockReplace } as any);
   });
 
   // Matrix is keyed by (segment, session), NOT by auth events.
   // This mirrors production logic: RootLayout checks session + segments, not event strings.
   test.each([
     // segment    | session  | expected redirect
-    ['(auth)',     SESSION,   '/'],
-    ['(auth)',     null,      null],
-    ['(tabs)',     SESSION,   null],
-    ['(tabs)',     null,      '/(auth)/login'],
-    ['',           SESSION,   null],
-    ['',           null,      '/(auth)/login'],
-  ])(
-    '[%s] + session=%p → %s',
-    async (segment, session, expectedRedirect) => {
-      jest.mocked(useSegments).mockReturnValue(segment ? [segment] : []);
-      const getAuthCallback = setupAuthStateChangeMock(supabase as any);
+    ['(auth)', SESSION, '/'],
+    ['(auth)', null, null],
+    ['(tabs)', SESSION, null],
+    ['(tabs)', null, '/(auth)/login'],
+    ['', SESSION, null],
+    ['', null, '/(auth)/login'],
+  ])('[%s] + session=%p → %s', async (segment, session, expectedRedirect) => {
+    jest.mocked(useSegments).mockReturnValue((segment ? [segment] : []) as any);
+    const getAuthCallback = setupAuthStateChangeMock(supabase as any);
 
-      render(<RootLayout />);
-      await triggerAuthEvent(
-        getAuthCallback,
-        session ? 'SIGNED_IN' : 'SIGNED_OUT',
-        session
-      );
+    render(<RootLayout />);
+    await triggerAuthEvent(getAuthCallback, session ? 'SIGNED_IN' : 'SIGNED_OUT', session);
 
-      if (expectedRedirect) {
-        expect(mockReplace).toHaveBeenCalledWith(expectedRedirect);
-      } else {
-        expect(mockReplace).not.toHaveBeenCalled();
-      }
+    if (expectedRedirect) {
+      expect(mockReplace).toHaveBeenCalledWith(expectedRedirect);
+    } else {
+      expect(mockReplace).not.toHaveBeenCalled();
     }
-  );
+  });
 
   it('does not redirect while auth state is loading', () => {
     jest.mocked(useSegments).mockReturnValue(['(tabs)']);

@@ -20,8 +20,8 @@ describe('LoginScreen', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.mocked(useRouter).mockReturnValue({ push: mockPush });
-    jest.mocked(useAuth).mockReturnValue({ login: mockLogin });
+    jest.mocked(useRouter).mockReturnValue({ push: mockPush } as any);
+    jest.mocked(useAuth).mockReturnValue({ login: mockLogin } as any);
   });
 
   describe('validation', () => {

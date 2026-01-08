@@ -7,7 +7,6 @@ jest.mock('expo/src/winter/ImportMetaRegistry', () => ({
 }));
 
 jest.mock('react-native-toast-message', () => {
-  const React = require('react');
   const MockToast = () => null;
   MockToast.show = jest.fn();
   return MockToast;

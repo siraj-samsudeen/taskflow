@@ -1,13 +1,6 @@
-import { ComponentProps } from 'react';
+import type { ComponentProps } from 'react';
 import { useController } from 'react-hook-form';
-import {
-  StyleProp,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  ViewStyle,
-} from 'react-native';
+import { type StyleProp, StyleSheet, Text, TextInput, View, type ViewStyle } from 'react-native';
 
 type CustomTextInput = {
   label?: string;
@@ -34,11 +27,7 @@ export default function CustomTextInput({
         value={value}
         onBlur={onBlur}
         onChangeText={onChange}
-        style={[
-          styles.input,
-          textInputProps.style,
-          error ? styles.errorInput : {},
-        ]}
+        style={[styles.input, textInputProps.style, error ? styles.errorInput : {}]}
       />
       <Text style={styles.error} numberOfLines={1}>
         {error?.message}

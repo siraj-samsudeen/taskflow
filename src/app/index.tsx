@@ -1,6 +1,6 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import type { User } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../lib/supabase';
 
 export default function HomeScreen() {

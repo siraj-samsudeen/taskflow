@@ -19,7 +19,7 @@ describe('PasswordResetRequestScreen', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.mocked(useRouter).mockReturnValue({ push: mockPush });
+    jest.mocked(useRouter).mockReturnValue({ push: mockPush } as any);
   });
 
   describe('validation', () => {
@@ -60,7 +60,9 @@ describe('PasswordResetRequestScreen', () => {
 
     it('shows error toast on API failure', async () => {
       mockAuth.resetPasswordForEmail.mockResolvedValue({
-        error: { message: 'For security purposes, you can only request this once every 60 seconds' },
+        error: {
+          message: 'For security purposes, you can only request this once every 60 seconds',
+        },
       } as any);
       render(<PasswordResetRequestScreen />);
 
@@ -76,7 +78,10 @@ describe('PasswordResetRequestScreen', () => {
     it('disables button and shows loading text while submitting', async () => {
       let resolvePromise: (value: any) => void;
       mockAuth.resetPasswordForEmail.mockImplementation(
-        () => new Promise((resolve) => { resolvePromise = resolve; })
+        () =>
+          new Promise((resolve) => {
+            resolvePromise = resolve;
+          }),
       );
       render(<PasswordResetRequestScreen />);
 

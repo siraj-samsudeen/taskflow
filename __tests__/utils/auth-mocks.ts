@@ -15,7 +15,7 @@ export function createAuthSubscription(unsubscribe = jest.fn()) {
  */
 export function setupAuthStateChangeMock(
   supabase: { auth: { onAuthStateChange: jest.Mock } },
-  options?: { unsubscribe?: jest.Mock }
+  options?: { unsubscribe?: jest.Mock },
 ) {
   let authCallback: ((event: string, session: unknown) => void) | undefined;
   supabase.auth.onAuthStateChange.mockImplementation((callback) => {
@@ -25,7 +25,7 @@ export function setupAuthStateChangeMock(
   return () => {
     if (!authCallback) {
       throw new Error(
-        'Auth callback not captured. Make sure the component is rendered and onAuthStateChange has been called.'
+        'Auth callback not captured. Make sure the component is rendered and onAuthStateChange has been called.',
       );
     }
     return authCallback;
@@ -39,7 +39,7 @@ export function setupAuthStateChangeMock(
 export async function triggerAuthEvent(
   getCallback: () => (event: string, session: unknown) => void,
   event: string,
-  session: unknown
+  session: unknown,
 ) {
   await act(async () => {
     getCallback()(event, session);

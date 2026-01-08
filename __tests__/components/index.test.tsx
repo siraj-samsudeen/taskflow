@@ -1,4 +1,4 @@
-import { render, screen, waitFor, userEvent } from '@testing-library/react-native';
+import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 
 import HomeScreen from '../../src/app/index';
 import { supabase } from '../../src/lib/supabase';
@@ -18,10 +18,10 @@ describe('HomeScreen', () => {
     jest.resetAllMocks();
     jest.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: { email: 'test@example.com' } },
-    });
+    } as any);
     jest.mocked(supabase.auth.onAuthStateChange).mockReturnValue({
       data: { subscription: { unsubscribe: jest.fn() } },
-    });
+    } as any);
   });
 
   it('renders welcome message', async () => {

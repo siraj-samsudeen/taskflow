@@ -1,6 +1,6 @@
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
-import { useRouter } from 'expo-router';
 import { useLinkingURL } from 'expo-linking';
+import { useRouter } from 'expo-router';
 
 import PasswordResetConfirmScreen from '../../src/app/(auth)/password-reset-confirm';
 import { supabase } from '../../src/lib/supabase';
@@ -24,7 +24,7 @@ describe('PasswordResetConfirmScreen', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.mocked(useRouter).mockReturnValue({ push: mockPush });
+    jest.mocked(useRouter).mockReturnValue({ push: mockPush } as any);
     jest.mocked(useLinkingURL).mockReturnValue(null);
   });
 
@@ -53,9 +53,11 @@ describe('PasswordResetConfirmScreen', () => {
   describe('expired link handling', () => {
     it('shows error toast and redirects when link is expired', async () => {
       const errorMessage = 'Email link is invalid or has expired';
-      jest.mocked(useLinkingURL).mockReturnValue(
-        `#error=access_denied&error_description=${errorMessage.replace(/ /g, '+')}`
-      );
+      jest
+        .mocked(useLinkingURL)
+        .mockReturnValue(
+          `#error=access_denied&error_description=${errorMessage.replace(/ /g, '+')}`,
+        );
       render(<PasswordResetConfirmScreen />);
 
       await waitFor(() => {
@@ -111,7 +113,10 @@ describe('PasswordResetConfirmScreen', () => {
     it('disables button and shows loading text while submitting', async () => {
       let resolvePromise: (value: any) => void;
       mockAuth.updateUser.mockImplementation(
-        () => new Promise((resolve) => { resolvePromise = resolve; })
+        () =>
+          new Promise((resolve) => {
+            resolvePromise = resolve;
+          }),
       );
       render(<PasswordResetConfirmScreen />);
 

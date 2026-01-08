@@ -13,11 +13,7 @@ export async function submitLoginForm(email: string, password: string) {
 /**
  * Fills the register form with credentials and submits it.
  */
-export async function submitRegisterForm(
-  email: string,
-  password: string,
-  confirmPassword: string
-) {
+export async function submitRegisterForm(email: string, password: string, confirmPassword: string) {
   const user = userEvent.setup();
   await user.type(screen.getByPlaceholderText('Email'), email);
   await user.type(screen.getByPlaceholderText('Password'), password);

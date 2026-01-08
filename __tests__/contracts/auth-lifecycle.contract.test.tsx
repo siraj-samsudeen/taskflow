@@ -22,8 +22,8 @@ jest.mock('../../src/lib/supabase', () => ({
 describe('Auth Lifecycle Contract', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.mocked(useRouter).mockReturnValue({ replace: jest.fn() });
-    jest.mocked(useSegments).mockReturnValue(['(auth)']);
+    jest.mocked(useRouter).mockReturnValue({ replace: jest.fn() } as any);
+    jest.mocked(useSegments).mockReturnValue(['(auth)'] as any);
   });
 
   it('unsubscribes from auth listener on unmount', () => {

@@ -1,19 +1,13 @@
 import {
-  AbstractPowerSyncDatabase,
-  CrudEntry,
-  PowerSyncBackendConnector,
+  type AbstractPowerSyncDatabase,
+  type PowerSyncBackendConnector,
   UpdateType,
 } from '@powersync/react-native';
 import { supabase } from './supabase';
 
 const POWERSYNC_URL = process.env.EXPO_PUBLIC_POWERSYNC_URL!;
 
-const FATAL_RESPONSE_CODES = [
-  /^22\d{3}$/,
-  /^23\d{3}$/,
-  /^42\d{3}$/,
-  /^PGRST\d{3}$/,
-];
+const FATAL_RESPONSE_CODES = [/^22\d{3}$/, /^23\d{3}$/, /^42\d{3}$/, /^PGRST\d{3}$/];
 
 export class SupabaseConnector implements PowerSyncBackendConnector {
   async fetchCredentials() {
@@ -40,11 +34,8 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
       return;
     }
 
-    let lastOp: CrudEntry | null = null;
-
     try {
       for (const op of transaction.crud) {
-        lastOp = op;
         const table = supabase.from(op.table);
         let result;
 

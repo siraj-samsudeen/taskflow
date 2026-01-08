@@ -1,7 +1,7 @@
 import '@powersync/react-native';
 import { PowerSyncDatabase } from '@powersync/react-native';
-import { AppSchema } from './schema';
 import { SupabaseConnector } from './SupabaseConnector';
+import { AppSchema } from './schema';
 
 export const db = new PowerSyncDatabase({
   schema: AppSchema,

@@ -20,8 +20,8 @@ describe('RegisterScreen', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.mocked(useRouter).mockReturnValue({ push: mockPush });
-    jest.mocked(useAuth).mockReturnValue({ signup: mockSignup });
+    jest.mocked(useRouter).mockReturnValue({ push: mockPush } as any);
+    jest.mocked(useAuth).mockReturnValue({ signup: mockSignup } as any);
   });
 
   describe('validation', () => {

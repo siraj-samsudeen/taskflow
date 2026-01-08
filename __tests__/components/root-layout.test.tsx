@@ -24,13 +24,13 @@ describe('RootLayout', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.mocked(useRouter).mockReturnValue({ replace: mockReplace });
-    jest.mocked(useSegments).mockReturnValue(['(auth)']);
+    jest.mocked(useRouter).mockReturnValue({ replace: mockReplace } as any);
+    jest.mocked(useSegments).mockReturnValue(['(auth)'] as any);
   });
 
   describe('password recovery', () => {
     it('navigates to password-reset-confirm screen on PASSWORD_RECOVERY event', async () => {
-      const getCallback = setupAuthStateChangeMock(supabase);
+      const getCallback = setupAuthStateChangeMock(supabase as any);
       render(<RootLayout />);
 
       await triggerAuthEvent(getCallback, 'PASSWORD_RECOVERY', { user: { id: '123' } });
@@ -41,8 +41,8 @@ describe('RootLayout', () => {
     });
 
     it('does not redirect away from password-reset-confirm screen even with session', async () => {
-        jest.mocked(useSegments).mockReturnValue(['(auth)', 'password-reset-confirm']);
-      const getCallback = setupAuthStateChangeMock(supabase);
+      jest.mocked(useSegments).mockReturnValue(['(auth)', 'password-reset-confirm'] as any);
+      const getCallback = setupAuthStateChangeMock(supabase as any);
       render(<RootLayout />);
 
       await triggerAuthEvent(getCallback, 'SIGNED_IN', { user: { id: '123' } });

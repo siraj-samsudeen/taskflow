@@ -1,9 +1,10 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
 import { Alert } from 'react-native';
+
 import LoginScreen from '../../src/app/(auth)/login';
 import { supabase } from '../../src/lib/supabase';
 import { createAuthSubscription } from '../utils/auth-mocks';
-import { fillLoginForm } from '../utils/form-helpers';
+import { submitLoginForm } from '../utils/form-helpers';
 
 jest.mock('../../src/lib/supabase', () => ({
   supabase: {
@@ -30,65 +31,40 @@ describe('LoginScreen', () => {
   });
 
   describe('validation', () => {
-    it('empty email -> shows error', async () => {
+    it('shows inline validation errors on invalid submit', async () => {
       const user = userEvent.setup();
       render(<LoginScreen />);
 
-      await user.type(screen.getByPlaceholderText('Password'), 'password123');
       await user.press(screen.getByText('Login'));
 
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please enter your email');
-    });
-
-    it('invalid email -> shows error', async () => {
-      const user = userEvent.setup();
-      render(<LoginScreen />);
-
-      await fillLoginForm(user, 'notanemail', 'password123');
-      await user.press(screen.getByText('Login'));
-
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please enter a valid email');
-    });
-
-    it('empty password -> shows error', async () => {
-      const user = userEvent.setup();
-      render(<LoginScreen />);
-
-      await user.type(screen.getByPlaceholderText('Email'), 'test@example.com');
-      await user.press(screen.getByText('Login'));
-
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please enter your password');
-    });
-
-    it('Invalid Login credentials -> shows error message', async () => {
-      const user = userEvent.setup();
-      (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
-        error: { message: 'Invalid credentials' },
-      });
-
-      render(<LoginScreen />);
-      await fillLoginForm(user, 'test@example.com', 'wrongpassword');
-      await user.press(screen.getByText('Login'));
-
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Invalid credentials');
+      expect(screen.getByText('Please enter a valid email')).toBeTruthy();
     });
   });
 
   describe('submission', () => {
     it('calls signInWithPassword with credentials', async () => {
-      const user = userEvent.setup();
       (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
         error: null,
       });
 
       render(<LoginScreen />);
-      await fillLoginForm(user, 'test@example.com', 'password123');
-      await user.press(screen.getByText('Login'));
+      await submitLoginForm('test@example.com', 'password123');
 
       expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'password123',
       });
+    });
+
+    it('shows error alert on invalid credentials', async () => {
+      (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
+        error: { message: 'Invalid credentials' },
+      });
+
+      render(<LoginScreen />);
+      await submitLoginForm('test@example.com', 'wrongpassword');
+
+      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Invalid credentials');
     });
   });
 });

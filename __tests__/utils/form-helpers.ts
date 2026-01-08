@@ -1,21 +1,26 @@
-import { screen, UserEvent } from '@testing-library/react-native';
+import { screen, userEvent } from '@testing-library/react-native';
 
-export async function fillLoginForm(
-  user: UserEvent,
-  email: string,
-  password: string
-) {
+/**
+ * Fills the login form with credentials and submits it.
+ */
+export async function submitLoginForm(email: string, password: string) {
+  const user = userEvent.setup();
   await user.type(screen.getByPlaceholderText('Email'), email);
   await user.type(screen.getByPlaceholderText('Password'), password);
+  await user.press(screen.getByText('Login'));
 }
 
-export async function fillRegisterForm(
-  user: UserEvent,
+/**
+ * Fills the register form with credentials and submits it.
+ */
+export async function submitRegisterForm(
   email: string,
   password: string,
   confirmPassword: string
 ) {
+  const user = userEvent.setup();
   await user.type(screen.getByPlaceholderText('Email'), email);
   await user.type(screen.getByPlaceholderText('Password'), password);
   await user.type(screen.getByPlaceholderText('Confirm Password'), confirmPassword);
+  await user.press(screen.getByText('Register'));
 }

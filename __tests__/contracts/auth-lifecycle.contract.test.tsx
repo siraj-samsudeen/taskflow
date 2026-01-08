@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import { useRouter, useSegments } from 'expo-router';
+
 import RootLayout from '../../src/app/_layout';
 import { supabase } from '../../src/lib/supabase';
 import { setupAuthStateChangeMock } from '../utils/auth-mocks';

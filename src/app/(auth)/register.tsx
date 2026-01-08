@@ -1,86 +1,85 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native';
-import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { FormProvider, useForm } from 'react-hook-form';
+import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { z } from 'zod';
+
+import CustomTextInput from '../../components/CustomTextInput';
 import { supabase } from '../../lib/supabase';
 
-export default function RegisterScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+const registerSchema = z
+  .object({
+    email: z.email({ message: 'Please enter a valid email' }),
+    password: z.string({ message: 'Password is required' }),
+    confirmPassword: z.string({ message: 'Confirm password is required' }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
-  const showError = (message: string) => {
+type RegisterForm = z.infer<typeof registerSchema>;
+
+export default function RegisterScreen() {
+  const methods = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { email: '', password: '', confirmPassword: '' },
+  });
+
+  const showMessage = (title: string, message: string) => {
     if (Platform.OS === 'web') {
       window.alert(message);
     } else {
-      Alert.alert('Error', message);
+      Alert.alert(title, message);
     }
   };
 
-  const handleRegister = async () => {
-    if (!email.trim()) {
-      showError('Please enter your email');
-      return;
-    }
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      showError('Please enter a valid email');
-      return;
-    }
-    if (!password) {
-      showError('Please enter your password');
-      return;
-    }
-    if (password !== confirmPassword) {
-      showError('Passwords do not match');
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
+  const handleRegister = async (data: RegisterForm) => {
+    const { error } = await supabase.auth.signUp({
+      email: data.email.trim(),
+      password: data.password,
     });
 
     if (error) {
-      showError(error.message);
+      showMessage('Error', error.message);
     } else {
-      if (Platform.OS === 'web') {
-        window.alert('Check your email to confirm your account');
-      } else {
-        Alert.alert('Success', 'Check your email to confirm your account');
-      }
+      showMessage('Success', 'Check your email to confirm your account');
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text>Create Account</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        autoComplete="email"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoComplete="password"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        autoComplete="password"
-      />
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Register</Text>
-      </TouchableOpacity>
-    </View>
+    <FormProvider {...methods}>
+      <View style={styles.container}>
+        <Text>Create Account</Text>
+        <CustomTextInput
+          name="email"
+          label="Email"
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoComplete="email"
+          containerStyle={styles.inputContainer}
+        />
+        <CustomTextInput
+          name="password"
+          label="Password"
+          placeholder="Password"
+          secureTextEntry
+          autoComplete="password"
+          containerStyle={styles.inputContainer}
+        />
+        <CustomTextInput
+          name="confirmPassword"
+          label="Confirm Password"
+          placeholder="Confirm Password"
+          secureTextEntry
+          autoComplete="password"
+          containerStyle={styles.inputContainer}
+        />
+        <TouchableOpacity style={styles.button} onPress={methods.handleSubmit(handleRegister)}>
+          <Text style={styles.buttonText}>Register</Text>
+        </TouchableOpacity>
+      </View>
+    </FormProvider>
   );
 }
 
@@ -90,13 +89,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 15,
-    borderRadius: 8,
+  inputContainer: {
     width: '80%',
-    marginTop: 20,
+    marginTop: 10,
   },
   button: {
     backgroundColor: '#007AFF',

@@ -1,10 +1,23 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native';
-import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { FormProvider, useForm } from 'react-hook-form';
+import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { z } from 'zod';
+
+import CustomTextInput from '../../components/CustomTextInput';
 import { supabase } from '../../lib/supabase';
 
+const loginSchema = z.object({
+  email: z.email({ message: 'Please enter a valid email' }),
+  password: z.string({ message: 'Password is required' }),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
+
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const methods = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  });
 
   const showError = (message: string) => {
     if (Platform.OS === 'web') {
@@ -14,23 +27,10 @@ export default function LoginScreen() {
     }
   };
 
-  const handleLogin = async () => {
-    if (!email.trim()) {
-      showError('Please enter your email');
-      return;
-    }
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      showError('Please enter a valid email');
-      return;
-    }
-    if (!password) {
-      showError('Please enter your password');
-      return;
-    }
-
+  const handleLogin = async (data: LoginForm) => {
     const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
+      email: data.email.trim(),
+      password: data.password,
     });
 
     if (error) {
@@ -39,29 +39,31 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text>TaskFlow</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        autoComplete="email"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoComplete="password"
-      />
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-    </View>
+    <FormProvider {...methods}>
+      <View style={styles.container}>
+        <Text>TaskFlow</Text>
+        <CustomTextInput
+          name="email"
+          label="Email"
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoComplete="email"
+          containerStyle={styles.inputContainer}
+        />
+        <CustomTextInput
+          name="password"
+          label="Password"
+          placeholder="Password"
+          secureTextEntry
+          autoComplete="password"
+          containerStyle={styles.inputContainer}
+        />
+        <TouchableOpacity style={styles.button} onPress={methods.handleSubmit(handleLogin)}>
+          <Text style={styles.buttonText}>Login</Text>
+        </TouchableOpacity>
+      </View>
+    </FormProvider>
   );
 }
 
@@ -71,13 +73,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 15,
-    borderRadius: 8,
+  inputContainer: {
     width: '80%',
-    marginTop: 20,
+    marginTop: 10,
   },
   button: {
     backgroundColor: '#007AFF',

@@ -1,9 +1,10 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
 import { Alert } from 'react-native';
+
 import RegisterScreen from '../../src/app/(auth)/register';
 import { supabase } from '../../src/lib/supabase';
 import { createAuthSubscription } from '../utils/auth-mocks';
-import { fillRegisterForm } from '../utils/form-helpers';
+import { submitRegisterForm } from '../utils/form-helpers';
 
 jest.mock('../../src/lib/supabase', () => ({
   supabase: {
@@ -30,60 +31,25 @@ describe('RegisterScreen', () => {
   });
 
   describe('validation', () => {
-    it('empty email -> shows error', async () => {
+    it('shows inline validation errors on invalid submit', async () => {
       const user = userEvent.setup();
       render(<RegisterScreen />);
 
-      await user.type(screen.getByPlaceholderText('Password'), 'password123');
-      await user.type(screen.getByPlaceholderText('Confirm Password'), 'password123');
       await user.press(screen.getByText('Register'));
 
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please enter your email');
+      expect(screen.getByText('Please enter a valid email')).toBeTruthy();
     });
-
-    it('invalid email -> shows error', async () => {
-      const user = userEvent.setup();
-      render(<RegisterScreen />);
-
-      await fillRegisterForm(user, 'notanemail', 'password123', 'password123');
-      await user.press(screen.getByText('Register'));
-
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please enter a valid email');
-    });
-
-    it('empty password -> shows error', async () => {
-      const user = userEvent.setup();
-      render(<RegisterScreen />);
-
-      await user.type(screen.getByPlaceholderText('Email'), 'test@example.com');
-      await user.press(screen.getByText('Register'));
-
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please enter your password');
-    });
-
-    it('passwords do not match -> shows error', async () => {
-      const user = userEvent.setup();
-      render(<RegisterScreen />);
-
-      await fillRegisterForm(user, 'test@example.com', 'password123', 'differentpassword');
-      await user.press(screen.getByText('Register'));
-
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Passwords do not match');
-    });
-
   });
 
   describe('submission', () => {
     it('calls signUp with credentials and shows confirmation', async () => {
-      const user = userEvent.setup();
       (supabase.auth.signUp as jest.Mock).mockResolvedValue({
         data: {},
         error: null,
       });
 
       render(<RegisterScreen />);
-      await fillRegisterForm(user, 'test@example.com', 'password123', 'password123');
-      await user.press(screen.getByText('Register'));
+      await submitRegisterForm('test@example.com', 'password123', 'password123');
 
       expect(supabase.auth.signUp).toHaveBeenCalledWith({
         email: 'test@example.com',

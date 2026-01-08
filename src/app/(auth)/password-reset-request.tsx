@@ -2,7 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { z } from 'zod';
 
 import CustomTextInput from '../../components/CustomTextInput';
@@ -22,24 +23,24 @@ export default function ForgotPasswordScreen() {
     defaultValues: { email: '' },
   });
 
-  const showMessage = (title: string, message: string) => {
-    if (Platform.OS === 'web') {
-      window.alert(message);
-    } else {
-      Alert.alert(title, message);
-    }
-  };
-
   const handleSubmit = async (data: ForgotPasswordForm) => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email.trim(), {
-        redirectTo: `${process.env.EXPO_PUBLIC_APP_URL}/reset-password`,
+        redirectTo: `${process.env.EXPO_PUBLIC_APP_URL}/password-reset-confirm`,
       });
       if (error) {
-        showMessage('Error', error.message);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error.message,
+        });
       } else {
-        showMessage('Success', 'Check your email for a reset link.');
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Check your email for a reset link.',
+        });
       }
     } finally {
       setIsLoading(false);

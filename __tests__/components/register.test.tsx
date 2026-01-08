@@ -1,5 +1,4 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import RegisterScreen from '../../src/app/(auth)/register';
@@ -20,10 +19,11 @@ jest.mock('../../src/lib/supabase', () => ({
   },
 }));
 
-// We use spy here instead of mock as we have done with supabase above.
-// Here we want to replace the Alert component only with a mock no-op function
-// because react-native is a large module and we don't want to replace it entirely.
-jest.spyOn(Alert, 'alert').mockImplementation();
+jest.mock('react-native-toast-message', () => ({
+  show: jest.fn(),
+}));
+
+import Toast from 'react-native-toast-message';
 
 describe('RegisterScreen', () => {
   const mockPush = jest.fn();
@@ -50,7 +50,7 @@ describe('RegisterScreen', () => {
   });
 
   describe('submission', () => {
-    it('calls signUp with credentials and shows confirmation', async () => {
+    it('calls signUp with credentials and shows success toast', async () => {
       (supabase.auth.signUp as jest.Mock).mockResolvedValue({
         data: {},
         error: null,
@@ -63,10 +63,11 @@ describe('RegisterScreen', () => {
         email: 'test@example.com',
         password: 'password123',
       });
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Success',
-        'Check your email to confirm your account'
-      );
+      expect(Toast.show).toHaveBeenCalledWith({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Check your email to confirm your account',
+      });
     });
   });
 

@@ -1,8 +1,7 @@
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import ForgotPasswordScreen from '../../src/app/(auth)/forgot-password';
+import PasswordResetRequestScreen from '../../src/app/(auth)/password-reset-request';
 import { supabase } from '../../src/lib/supabase';
 import { submitForgotPasswordForm } from '../utils/form-helpers';
 
@@ -18,9 +17,13 @@ jest.mock('../../src/lib/supabase', () => ({
   },
 }));
 
-jest.spyOn(Alert, 'alert').mockImplementation();
+jest.mock('react-native-toast-message', () => ({
+  show: jest.fn(),
+}));
 
-describe('ForgotPasswordScreen', () => {
+import Toast from 'react-native-toast-message';
+
+describe('PasswordResetRequestScreen', () => {
   const mockPush = jest.fn();
 
   beforeEach(() => {
@@ -31,7 +34,7 @@ describe('ForgotPasswordScreen', () => {
   describe('validation', () => {
     it('shows inline validation errors on invalid submit', async () => {
       const user = userEvent.setup();
-      render(<ForgotPasswordScreen />);
+      render(<PasswordResetRequestScreen />);
 
       await user.press(screen.getByText('Send Reset Link'));
 
@@ -42,36 +45,41 @@ describe('ForgotPasswordScreen', () => {
   describe('submission', () => {
     it('calls resetPasswordForEmail with email and redirectTo', async () => {
       (supabase.auth.resetPasswordForEmail as jest.Mock).mockResolvedValue({ error: null });
-      render(<ForgotPasswordScreen />);
+      render(<PasswordResetRequestScreen />);
 
       await submitForgotPasswordForm('test@example.com');
 
       expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith('test@example.com', {
-        redirectTo: `${process.env.EXPO_PUBLIC_APP_URL}/reset-password`,
+        redirectTo: `${process.env.EXPO_PUBLIC_APP_URL}/password-reset-confirm`,
       });
     });
 
-    it('shows success alert after email sent', async () => {
+    it('shows success toast after email sent', async () => {
       (supabase.auth.resetPasswordForEmail as jest.Mock).mockResolvedValue({ error: null });
-      render(<ForgotPasswordScreen />);
+      render(<PasswordResetRequestScreen />);
 
       await submitForgotPasswordForm('test@example.com');
 
-      expect(Alert.alert).toHaveBeenCalledWith('Success', 'Check your email for a reset link.');
+      expect(Toast.show).toHaveBeenCalledWith({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Check your email for a reset link.',
+      });
     });
 
-    it('shows error alert on API failure', async () => {
+    it('shows error toast on API failure', async () => {
       (supabase.auth.resetPasswordForEmail as jest.Mock).mockResolvedValue({
         error: { message: 'For security purposes, you can only request this once every 60 seconds' },
       });
-      render(<ForgotPasswordScreen />);
+      render(<PasswordResetRequestScreen />);
 
       await submitForgotPasswordForm('test@example.com');
 
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Error',
-        'For security purposes, you can only request this once every 60 seconds'
-      );
+      expect(Toast.show).toHaveBeenCalledWith({
+        type: 'error',
+        text1: 'Error',
+        text2: 'For security purposes, you can only request this once every 60 seconds',
+      });
     });
 
     it('disables button and shows loading text while submitting', async () => {
@@ -79,7 +87,7 @@ describe('ForgotPasswordScreen', () => {
       (supabase.auth.resetPasswordForEmail as jest.Mock).mockImplementation(
         () => new Promise((resolve) => { resolvePromise = resolve; })
       );
-      render(<ForgotPasswordScreen />);
+      render(<PasswordResetRequestScreen />);
 
       await submitForgotPasswordForm('test@example.com');
 
@@ -96,7 +104,7 @@ describe('ForgotPasswordScreen', () => {
   describe('navigation', () => {
     it('navigates back to login when link pressed', async () => {
       const user = userEvent.setup();
-      render(<ForgotPasswordScreen />);
+      render(<PasswordResetRequestScreen />);
 
       await user.press(screen.getByText('Back to Login'));
 

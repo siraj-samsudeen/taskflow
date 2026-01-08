@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormProvider, useForm } from 'react-hook-form';
-import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { z } from 'zod';
 import { useRouter } from 'expo-router';
 
@@ -21,14 +22,6 @@ export default function LoginScreen() {
     defaultValues: { email: '', password: '' },
   });
 
-  const showError = (message: string) => {
-    if (Platform.OS === 'web') {
-      window.alert(message);
-    } else {
-      Alert.alert('Error', message);
-    }
-  };
-
   const handleLogin = async (data: LoginForm) => {
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email.trim(),
@@ -36,7 +29,7 @@ export default function LoginScreen() {
     });
 
     if (error) {
-      showError(error.message);
+      Toast.show({ type: 'error', text1: 'Error', text2: error.message });
     }
   };
 
@@ -72,7 +65,7 @@ export default function LoginScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.linkContainer}
-          onPress={() => router.push('/(auth)/forgot-password')}
+          onPress={() => router.push('/(auth)/password-reset-request')}
         >
           <Text style={styles.linkText}>Forgot Password?</Text>
         </TouchableOpacity>

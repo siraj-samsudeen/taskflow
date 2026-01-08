@@ -158,7 +158,7 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 
 ### 7.3 Empty States & Feedback
 - [ ] Create empty state illustrations
-- [ ] Add toast notifications
+- [x] Add toast notifications
 - [ ] Add haptic feedback (mobile)
 - [ ] Add offline indicator banner
 

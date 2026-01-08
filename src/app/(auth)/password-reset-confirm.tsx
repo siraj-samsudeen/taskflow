@@ -3,7 +3,8 @@ import { useLinkingURL } from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { z } from 'zod';
 
 import CustomTextInput from '../../components/CustomTextInput';
@@ -26,12 +27,8 @@ export default function ResetPasswordScreen() {
   const url = useLinkingURL();
   const [isLoading, setIsLoading] = useState(false);
 
-  const showMessage = (title: string, message: string) => {
-    if (Platform.OS === 'web') {
-      window.alert(message);
-    } else {
-      Alert.alert(title, message);
-    }
+  const showToast = (type: 'success' | 'error', title: string, message: string) => {
+    Toast.show({ type, text1: title, text2: message });
   };
 
   useEffect(() => {
@@ -42,8 +39,8 @@ export default function ResetPasswordScreen() {
     const error = params.get('error');
     if (error) {
       const description = params.get('error_description')?.replace(/\+/g, ' ');
-      showMessage('Error', description || 'Invalid or expired reset link. Please request a new one.');
-      router.push('/(auth)/forgot-password');
+      showToast('error', 'Error', description || 'Invalid or expired reset link. Please request a new one.');
+      router.push('/(auth)/password-reset-request');
     }
   }, [url, router]);
 
@@ -57,9 +54,9 @@ export default function ResetPasswordScreen() {
     try {
       const { error } = await supabase.auth.updateUser({ password: data.password });
       if (error) {
-        showMessage('Error', error.message);
+        showToast('error', 'Error', error.message);
       } else {
-        showMessage('Success', 'Your password has been reset.');
+        showToast('success', 'Success', 'Your password has been reset.');
         router.push('/(auth)/login');
       }
     } finally {

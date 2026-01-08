@@ -1,6 +1,7 @@
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Session } from '@supabase/supabase-js';
+import Toast from 'react-native-toast-message';
 import { supabase } from '../lib/supabase';
 
 export default function RootLayout() {
@@ -14,7 +15,7 @@ export default function RootLayout() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
-        router.replace('/(auth)/reset-password');
+        router.replace('/(auth)/password-reset-confirm');
         return;
       }
       setSession(session);
@@ -29,7 +30,7 @@ export default function RootLayout() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const isResetPassword = segments[1] === 'reset-password';
+    const isResetPassword = segments[1] === 'password-reset-confirm';
 
     if (session && inAuthGroup && !isResetPassword) {
       router.replace('/');
@@ -38,5 +39,10 @@ export default function RootLayout() {
     }
   }, [session, segments, isLoading]);
 
-  return <Slot />;
+  return (
+    <>
+      <Slot />
+      <Toast />
+    </>
+  );
 }

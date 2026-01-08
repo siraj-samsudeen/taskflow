@@ -1,9 +1,8 @@
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useLinkingURL } from 'expo-linking';
 
-import ResetPasswordScreen from '../../src/app/(auth)/reset-password';
+import PasswordResetConfirmScreen from '../../src/app/(auth)/password-reset-confirm';
 import { supabase } from '../../src/lib/supabase';
 import { submitResetPasswordForm } from '../utils/form-helpers';
 
@@ -23,9 +22,13 @@ jest.mock('../../src/lib/supabase', () => ({
   },
 }));
 
-jest.spyOn(Alert, 'alert').mockImplementation();
+jest.mock('react-native-toast-message', () => ({
+  show: jest.fn(),
+}));
 
-describe('ResetPasswordScreen', () => {
+import Toast from 'react-native-toast-message';
+
+describe('PasswordResetConfirmScreen', () => {
   const mockPush = jest.fn();
 
   beforeEach(() => {
@@ -37,7 +40,7 @@ describe('ResetPasswordScreen', () => {
   describe('validation', () => {
     it('shows validation error when password empty', async () => {
       const user = userEvent.setup();
-      render(<ResetPasswordScreen />);
+      render(<PasswordResetConfirmScreen />);
 
       await user.press(screen.getByText('Reset Password'));
 
@@ -46,7 +49,7 @@ describe('ResetPasswordScreen', () => {
 
     it('shows validation error when passwords do not match', async () => {
       const user = userEvent.setup();
-      render(<ResetPasswordScreen />);
+      render(<PasswordResetConfirmScreen />);
 
       await user.type(screen.getByPlaceholderText('New Password'), 'password123');
       await user.type(screen.getByPlaceholderText('Confirm Password'), 'different');
@@ -57,16 +60,20 @@ describe('ResetPasswordScreen', () => {
   });
 
   describe('expired link handling', () => {
-    it('shows error and redirects when link is expired', async () => {
+    it('shows error toast and redirects when link is expired', async () => {
       const errorMessage = 'Email link is invalid or has expired';
       (useLinkingURL as jest.Mock).mockReturnValue(
         `#error=access_denied&error_description=${errorMessage.replace(/ /g, '+')}`
       );
-      render(<ResetPasswordScreen />);
+      render(<PasswordResetConfirmScreen />);
 
       await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith('Error', errorMessage);
-        expect(mockPush).toHaveBeenCalledWith('/(auth)/forgot-password');
+        expect(Toast.show).toHaveBeenCalledWith({
+          type: 'error',
+          text1: 'Error',
+          text2: errorMessage,
+        });
+        expect(mockPush).toHaveBeenCalledWith('/(auth)/password-reset-request');
       });
     });
   });
@@ -74,32 +81,40 @@ describe('ResetPasswordScreen', () => {
   describe('submission', () => {
     it('calls updateUser with new password on submit', async () => {
       (supabase.auth.updateUser as jest.Mock).mockResolvedValue({ error: null });
-      render(<ResetPasswordScreen />);
+      render(<PasswordResetConfirmScreen />);
 
       await submitResetPasswordForm('newpassword123', 'newpassword123');
 
       expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: 'newpassword123' });
     });
 
-    it('shows success alert and navigates to login after password reset', async () => {
+    it('shows success toast and navigates to login after password reset', async () => {
       (supabase.auth.updateUser as jest.Mock).mockResolvedValue({ error: null });
-      render(<ResetPasswordScreen />);
+      render(<PasswordResetConfirmScreen />);
 
       await submitResetPasswordForm('newpassword123', 'newpassword123');
 
-      expect(Alert.alert).toHaveBeenCalledWith('Success', 'Your password has been reset.');
+      expect(Toast.show).toHaveBeenCalledWith({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Your password has been reset.',
+      });
       expect(mockPush).toHaveBeenCalledWith('/(auth)/login');
     });
 
-    it('shows error alert on API failure', async () => {
+    it('shows error toast on API failure', async () => {
       (supabase.auth.updateUser as jest.Mock).mockResolvedValue({
         error: { message: 'Token expired' },
       });
-      render(<ResetPasswordScreen />);
+      render(<PasswordResetConfirmScreen />);
 
       await submitResetPasswordForm('newpassword123', 'newpassword123');
 
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Token expired');
+      expect(Toast.show).toHaveBeenCalledWith({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Token expired',
+      });
     });
 
     it('disables button and shows loading text while submitting', async () => {
@@ -107,7 +122,7 @@ describe('ResetPasswordScreen', () => {
       (supabase.auth.updateUser as jest.Mock).mockImplementation(
         () => new Promise((resolve) => { resolvePromise = resolve; })
       );
-      render(<ResetPasswordScreen />);
+      render(<PasswordResetConfirmScreen />);
 
       await submitResetPasswordForm('newpassword123', 'newpassword123');
 

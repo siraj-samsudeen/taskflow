@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormProvider, useForm } from 'react-hook-form';
-import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { z } from 'zod';
 import { useRouter } from 'expo-router';
 
@@ -27,14 +28,6 @@ export default function RegisterScreen() {
     defaultValues: { email: '', password: '', confirmPassword: '' },
   });
 
-  const showMessage = (title: string, message: string) => {
-    if (Platform.OS === 'web') {
-      window.alert(message);
-    } else {
-      Alert.alert(title, message);
-    }
-  };
-
   const handleRegister = async (data: RegisterForm) => {
     const { error } = await supabase.auth.signUp({
       email: data.email.trim(),
@@ -42,9 +35,9 @@ export default function RegisterScreen() {
     });
 
     if (error) {
-      showMessage('Error', error.message);
+      Toast.show({ type: 'error', text1: 'Error', text2: error.message });
     } else {
-      showMessage('Success', 'Check your email to confirm your account');
+      Toast.show({ type: 'success', text1: 'Success', text2: 'Check your email to confirm your account' });
     }
   };
 

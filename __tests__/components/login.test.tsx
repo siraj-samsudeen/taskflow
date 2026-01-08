@@ -1,5 +1,4 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import LoginScreen from '../../src/app/(auth)/login';
@@ -20,10 +19,11 @@ jest.mock('../../src/lib/supabase', () => ({
   },
 }));
 
-// We use spy here instead of mock as we have done with supabase above.
-// Here we want to replace the Alert component only with a mock no-op function
-// because react-native is a large module and we don't want to replace it entirely.
-jest.spyOn(Alert, 'alert').mockImplementation();
+jest.mock('react-native-toast-message', () => ({
+  show: jest.fn(),
+}));
+
+import Toast from 'react-native-toast-message';
 
 describe('LoginScreen', () => {
   const mockPush = jest.fn();
@@ -64,7 +64,7 @@ describe('LoginScreen', () => {
       });
     });
 
-    it('shows error alert on invalid credentials', async () => {
+    it('shows error toast on invalid credentials', async () => {
       (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
         error: { message: 'Invalid credentials' },
       });
@@ -72,7 +72,11 @@ describe('LoginScreen', () => {
       render(<LoginScreen />);
       await submitLoginForm('test@example.com', 'wrongpassword');
 
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Invalid credentials');
+      expect(Toast.show).toHaveBeenCalledWith({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Invalid credentials',
+      });
     });
   });
 
@@ -92,7 +96,7 @@ describe('LoginScreen', () => {
 
       await user.press(screen.getByText('Forgot Password?'));
 
-      expect(mockPush).toHaveBeenCalledWith('/(auth)/forgot-password');
+      expect(mockPush).toHaveBeenCalledWith('/(auth)/password-reset-request');
     });
   });
 });

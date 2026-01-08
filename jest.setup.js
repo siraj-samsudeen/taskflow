@@ -6,6 +6,13 @@ jest.mock('expo/src/winter/ImportMetaRegistry', () => ({
   },
 }));
 
+jest.mock('react-native-toast-message', () => {
+  const React = require('react');
+  const MockToast = () => null;
+  MockToast.show = jest.fn();
+  return MockToast;
+});
+
 if (typeof global.structuredClone === 'undefined') {
   global.structuredClone = (object) => JSON.parse(JSON.stringify(object));
 }

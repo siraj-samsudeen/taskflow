@@ -11,10 +11,6 @@ jest.mock('expo-router', () => ({
 
 jest.mock('../../src/lib/supabase');
 
-jest.mock('react-native-toast-message', () => ({
-  show: jest.fn(),
-}));
-
 import Toast from 'react-native-toast-message';
 
 describe('PasswordResetRequestScreen', () => {

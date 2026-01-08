@@ -38,6 +38,7 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 - [x] Create Login screen (email/password)
 - [x] Create Sign Up screen
 - [x] Create Forgot Password screen
+- [x] Create Reset Password screen (handles redirect URL with recovery tokens)
 - [x] Add form validation (CustomTextInput + react-hook-form + zod)
 - [x] Add navigation links between login/signup screens
 

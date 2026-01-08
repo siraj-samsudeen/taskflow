@@ -33,3 +33,13 @@ export async function submitForgotPasswordForm(email: string) {
   await user.type(screen.getByPlaceholderText('Email'), email);
   await user.press(screen.getByText('Send Reset Link'));
 }
+
+/**
+ * Fills the reset password form and submits it.
+ */
+export async function submitResetPasswordForm(password: string, confirmPassword: string) {
+  const user = userEvent.setup();
+  await user.type(screen.getByPlaceholderText('New Password'), password);
+  await user.type(screen.getByPlaceholderText('Confirm Password'), confirmPassword);
+  await user.press(screen.getByText('Reset Password'));
+}

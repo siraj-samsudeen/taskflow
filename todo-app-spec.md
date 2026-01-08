@@ -13,21 +13,21 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 ## Phase 1: Project Setup & Infrastructure
 
 ### 1.1 Initialize Expo Project
-- [ ] Create new Expo project with TypeScript template
-- [ ] Configure ESLint and Prettier
-- [ ] Set up folder structure (src/screens, src/components, src/lib, src/hooks, src/types)
-- [ ] Add AGENTS.md with project conventions
+- [x] Create new Expo project with TypeScript template
+- [x] Configure ESLint and Prettier
+- [x] Set up folder structure (src/screens, src/components, src/lib, src/hooks, src/types)
+- [x] Add AGENTS.md with project conventions
 
 ### 1.2 Supabase Setup
-- [ ] Create Supabase project
-- [ ] Configure environment variables (.env)
-- [ ] Install @supabase/supabase-js
-- [ ] Create Supabase client utility
+- [x] Create Supabase project
+- [x] Configure environment variables (.env)
+- [x] Install @supabase/supabase-js
+- [x] Create Supabase client utility
 
 ### 1.3 PowerSync Setup
-- [ ] Install @powersync/react-native and dependencies
-- [ ] Configure PowerSync schema
-- [ ] Set up PowerSync provider wrapper
+- [x] Install @powersync/react-native and dependencies
+- [x] Configure PowerSync schema
+- [x] Set up PowerSync provider wrapper (SupabaseConnector)
 - [ ] Test offline/online sync
 
 ---
@@ -35,42 +35,43 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 ## Phase 2: Authentication
 
 ### 2.1 Auth Screens
-- [ ] Create Login screen (email/password)
-- [ ] Create Sign Up screen
+- [x] Create Login screen (email/password)
+- [x] Create Sign Up screen
 - [ ] Create Forgot Password screen
-- [ ] Add form validation
+- [x] Add form validation (CustomTextInput + react-hook-form + zod)
+- [ ] Add navigation links between login/signup screens
 
 ### 2.2 Auth State Management
 - [ ] Create AuthContext provider
 - [ ] Implement login function
 - [ ] Implement signup function
 - [ ] Implement logout function
-- [ ] Add session persistence
+- [x] Add session persistence
 
 ### 2.3 Navigation Guards
-- [ ] Set up React Navigation
-- [ ] Create auth stack (login/signup)
-- [ ] Create main stack (protected routes)
-- [ ] Implement auth state listener
+- [x] Set up React Navigation
+- [x] Create auth stack (login/signup)
+- [x] Create main stack (protected routes)
+- [x] Implement auth state listener
 
 ---
 
 ## Phase 3: Database Schema
 
 ### 3.1 Supabase Tables
-- [ ] Create `clients` table (id, name, color, created_at)
-- [ ] Create `projects` table (id, client_id, name, description, status, created_at)
-- [ ] Create `tasks` table (id, project_id, title, description, status, priority, due_date, assigned_to, created_at, updated_at)
-- [ ] Create `team_members` table (id, user_id, name, email, avatar_url)
+- [x] Create `clients` table (id, name, color, created_at)
+- [x] Create `projects` table (id, client_id, name, description, status, created_at)
+- [x] Create `tasks` table (id, project_id, title, description, status, priority, due_date, assigned_to, created_at, updated_at)
+- [x] Create `team_members` table (id, user_id, name, email, avatar_url)
 
 ### 3.2 Row Level Security (RLS)
-- [ ] Enable RLS on all tables
-- [ ] Create policies for team member access
+- [x] Enable RLS on all tables
+- [x] Create policies for team member access
 - [ ] Test RLS policies
 
 ### 3.3 PowerSync Schema Sync
-- [ ] Define PowerSync schema matching Supabase tables
-- [ ] Configure sync rules
+- [x] Define PowerSync schema matching Supabase tables
+- [x] Configure sync rules
 - [ ] Test bidirectional sync
 
 ---

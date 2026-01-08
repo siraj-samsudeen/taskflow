@@ -19,7 +19,7 @@ describe('PasswordResetRequestScreen', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+    jest.mocked(useRouter).mockReturnValue({ push: mockPush });
   });
 
   describe('validation', () => {

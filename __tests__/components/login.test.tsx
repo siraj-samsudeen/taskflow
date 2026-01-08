@@ -1,27 +1,27 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
+import Toast from 'react-native-toast-message';
 
 import LoginScreen from '../../src/app/(auth)/login';
-import { supabase } from '../../src/lib/supabase';
-import { createAuthSubscription } from '../utils/auth-mocks';
+import { useAuth } from '../../src/contexts/AuthContext';
 import { submitLoginForm } from '../utils/form-helpers';
 
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock('../../src/lib/supabase');
-
-import Toast from 'react-native-toast-message';
+jest.mock('../../src/contexts/AuthContext', () => ({
+  useAuth: jest.fn(),
+}));
 
 describe('LoginScreen', () => {
   const mockPush = jest.fn();
-  const mockAuth = jest.mocked(supabase.auth);
+  const mockLogin = jest.fn();
 
   beforeEach(() => {
     jest.resetAllMocks();
-    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
-    mockAuth.onAuthStateChange.mockReturnValue(createAuthSubscription());
+    jest.mocked(useRouter).mockReturnValue({ push: mockPush });
+    jest.mocked(useAuth).mockReturnValue({ login: mockLogin });
   });
 
   describe('validation', () => {
@@ -36,22 +36,19 @@ describe('LoginScreen', () => {
   });
 
   describe('submission', () => {
-    it('calls signInWithPassword with credentials', async () => {
-      mockAuth.signInWithPassword.mockResolvedValue({ error: null } as any);
+    it('calls login with credentials', async () => {
+      mockLogin.mockResolvedValue({ error: null });
 
       render(<LoginScreen />);
       await submitLoginForm('test@example.com', 'password123');
 
-      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
-      });
+      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
     });
 
     it('shows error toast on invalid credentials', async () => {
-      mockAuth.signInWithPassword.mockResolvedValue({
+      mockLogin.mockResolvedValue({
         error: { message: 'Invalid credentials' },
-      } as any);
+      });
 
       render(<LoginScreen />);
       await submitLoginForm('test@example.com', 'wrongpassword');

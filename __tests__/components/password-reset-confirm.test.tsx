@@ -24,8 +24,8 @@ describe('PasswordResetConfirmScreen', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
-    (useLinkingURL as jest.Mock).mockReturnValue(null);
+    jest.mocked(useRouter).mockReturnValue({ push: mockPush });
+    jest.mocked(useLinkingURL).mockReturnValue(null);
   });
 
   describe('validation', () => {
@@ -53,7 +53,7 @@ describe('PasswordResetConfirmScreen', () => {
   describe('expired link handling', () => {
     it('shows error toast and redirects when link is expired', async () => {
       const errorMessage = 'Email link is invalid or has expired';
-      (useLinkingURL as jest.Mock).mockReturnValue(
+      jest.mocked(useLinkingURL).mockReturnValue(
         `#error=access_denied&error_description=${errorMessage.replace(/ /g, '+')}`
       );
       render(<PasswordResetConfirmScreen />);

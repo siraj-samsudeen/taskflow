@@ -27,7 +27,7 @@ describe('Auth Routing Contract', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    (useRouter as jest.Mock).mockReturnValue({ replace: mockReplace });
+    jest.mocked(useRouter).mockReturnValue({ replace: mockReplace });
   });
 
   // Matrix is keyed by (segment, session), NOT by auth events.
@@ -43,7 +43,7 @@ describe('Auth Routing Contract', () => {
   ])(
     '[%s] + session=%p → %s',
     async (segment, session, expectedRedirect) => {
-      (useSegments as jest.Mock).mockReturnValue(segment ? [segment] : []);
+      jest.mocked(useSegments).mockReturnValue(segment ? [segment] : []);
       const getAuthCallback = setupAuthStateChangeMock(supabase as any);
 
       render(<RootLayout />);
@@ -62,7 +62,7 @@ describe('Auth Routing Contract', () => {
   );
 
   it('does not redirect while auth state is loading', () => {
-    (useSegments as jest.Mock).mockReturnValue(['(tabs)']);
+    jest.mocked(useSegments).mockReturnValue(['(tabs)']);
     setupAuthStateChangeMock(supabase as any);
 
     render(<RootLayout />);

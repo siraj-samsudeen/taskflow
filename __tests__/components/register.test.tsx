@@ -1,27 +1,27 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
+import Toast from 'react-native-toast-message';
 
 import RegisterScreen from '../../src/app/(auth)/register';
-import { supabase } from '../../src/lib/supabase';
-import { createAuthSubscription } from '../utils/auth-mocks';
+import { useAuth } from '../../src/contexts/AuthContext';
 import { submitRegisterForm } from '../utils/form-helpers';
 
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock('../../src/lib/supabase');
-
-import Toast from 'react-native-toast-message';
+jest.mock('../../src/contexts/AuthContext', () => ({
+  useAuth: jest.fn(),
+}));
 
 describe('RegisterScreen', () => {
   const mockPush = jest.fn();
-  const mockAuth = jest.mocked(supabase.auth);
+  const mockSignup = jest.fn();
 
   beforeEach(() => {
     jest.resetAllMocks();
-    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
-    mockAuth.onAuthStateChange.mockReturnValue(createAuthSubscription());
+    jest.mocked(useRouter).mockReturnValue({ push: mockPush });
+    jest.mocked(useAuth).mockReturnValue({ signup: mockSignup });
   });
 
   describe('validation', () => {
@@ -36,16 +36,13 @@ describe('RegisterScreen', () => {
   });
 
   describe('submission', () => {
-    it('calls signUp with credentials and shows success toast', async () => {
-      mockAuth.signUp.mockResolvedValue({ data: {}, error: null } as any);
+    it('calls signup with credentials and shows success toast', async () => {
+      mockSignup.mockResolvedValue({ error: null });
 
       render(<RegisterScreen />);
       await submitRegisterForm('test@example.com', 'password123', 'password123');
 
-      expect(supabase.auth.signUp).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
-      });
+      expect(mockSignup).toHaveBeenCalledWith('test@example.com', 'password123');
       expect(Toast.show).toHaveBeenCalledWith({
         type: 'success',
         text1: 'Success',

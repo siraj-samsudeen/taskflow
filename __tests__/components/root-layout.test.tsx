@@ -24,8 +24,8 @@ describe('RootLayout', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    (useRouter as jest.Mock).mockReturnValue({ replace: mockReplace });
-    (useSegments as jest.Mock).mockReturnValue(['(auth)']);
+    jest.mocked(useRouter).mockReturnValue({ replace: mockReplace });
+    jest.mocked(useSegments).mockReturnValue(['(auth)']);
   });
 
   describe('password recovery', () => {
@@ -41,7 +41,7 @@ describe('RootLayout', () => {
     });
 
     it('does not redirect away from password-reset-confirm screen even with session', async () => {
-        (useSegments as jest.Mock).mockReturnValue(['(auth)', 'password-reset-confirm']);
+        jest.mocked(useSegments).mockReturnValue(['(auth)', 'password-reset-confirm']);
       const getCallback = setupAuthStateChangeMock(supabase);
       render(<RootLayout />);
 

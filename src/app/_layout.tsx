@@ -1,48 +1,44 @@
 import { Slot, useRouter, useSegments } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Session } from '@supabase/supabase-js';
+import { useEffect } from 'react';
 import Toast from 'react-native-toast-message';
-import { supabase } from '../lib/supabase';
 
-export default function RootLayout() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
+
+function RootLayoutNav() {
+  const { session, isLoading, authEvent } = useAuth();
   const router = useRouter();
   const segments = useSegments();
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        router.replace('/(auth)/password-reset-confirm');
-        return;
-      }
-      setSession(session);
-      setIsLoading(false);
-    });
+    if (authEvent === 'PASSWORD_RECOVERY') {
+      router.replace('/(auth)/password-reset-confirm');
+      return;
+    }
 
-    return () => subscription.unsubscribe();
-  }, [router]);
-
-  useEffect(() => {
-    // Wait for auth state before redirecting to prevent flash redirect on app load
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const isResetPassword = segments[1] === 'password-reset-confirm';
+    const isResetPassword = (segments as string[])[1] === 'password-reset-confirm';
 
     if (session && inAuthGroup && !isResetPassword) {
       router.replace('/');
     } else if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
     }
-  }, [session, segments, isLoading]);
+  }, [session, segments, isLoading, authEvent, router]);
 
   return (
     <>
       <Slot />
       <Toast />
     </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
   );
 }

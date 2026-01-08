@@ -16,10 +16,10 @@ jest.mock('../../src/lib/supabase', () => ({
 describe('HomeScreen', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    (supabase.auth.getUser as jest.Mock).mockResolvedValue({
+    jest.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: { email: 'test@example.com' } },
     });
-    (supabase.auth.onAuthStateChange as jest.Mock).mockReturnValue({
+    jest.mocked(supabase.auth.onAuthStateChange).mockReturnValue({
       data: { subscription: { unsubscribe: jest.fn() } },
     });
   });

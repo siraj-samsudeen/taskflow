@@ -43,9 +43,9 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 - [x] Add navigation links between login/signup screens
 
 ### 2.2 Auth State Management
-- [ ] Create AuthContext provider
-- [ ] Implement login function
-- [ ] Implement signup function
+- [x] Create AuthContext provider
+- [x] Implement login function
+- [x] Implement signup function
 - [x] Implement logout function
 - [x] Add session persistence
 

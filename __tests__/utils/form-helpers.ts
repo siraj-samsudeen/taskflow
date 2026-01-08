@@ -24,3 +24,12 @@ export async function submitRegisterForm(
   await user.type(screen.getByPlaceholderText('Confirm Password'), confirmPassword);
   await user.press(screen.getByText('Register'));
 }
+
+/**
+ * Fills the forgot password form and submits it.
+ */
+export async function submitForgotPasswordForm(email: string) {
+  const user = userEvent.setup();
+  await user.type(screen.getByPlaceholderText('Email'), email);
+  await user.press(screen.getByText('Send Reset Link'));
+}

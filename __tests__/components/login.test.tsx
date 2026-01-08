@@ -85,5 +85,14 @@ describe('LoginScreen', () => {
 
       expect(mockPush).toHaveBeenCalledWith('/(auth)/register');
     });
+
+    it('navigates to forgot password screen when link pressed', async () => {
+      const user = userEvent.setup();
+      render(<LoginScreen />);
+
+      await user.press(screen.getByText('Forgot Password?'));
+
+      expect(mockPush).toHaveBeenCalledWith('/(auth)/forgot-password');
+    });
   });
 });

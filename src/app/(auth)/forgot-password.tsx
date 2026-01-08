@@ -1,49 +1,55 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { z } from 'zod';
-import { useRouter } from 'expo-router';
 
 import CustomTextInput from '../../components/CustomTextInput';
 import { supabase } from '../../lib/supabase';
 
-const loginSchema = z.object({
+const forgotPasswordSchema = z.object({
   email: z.email({ message: 'Please enter a valid email' }),
-  password: z.string({ message: 'Password is required' }),
 });
 
-type LoginForm = z.infer<typeof loginSchema>;
+type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
 
-export default function LoginScreen() {
+export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const methods = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+  const [isLoading, setIsLoading] = useState(false);
+  const methods = useForm<ForgotPasswordForm>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: '' },
   });
 
-  const showError = (message: string) => {
+  const showMessage = (title: string, message: string) => {
     if (Platform.OS === 'web') {
       window.alert(message);
     } else {
-      Alert.alert('Error', message);
+      Alert.alert(title, message);
     }
   };
 
-  const handleLogin = async (data: LoginForm) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: data.email.trim(),
-      password: data.password,
-    });
-
-    if (error) {
-      showError(error.message);
+  const handleSubmit = async (data: ForgotPasswordForm) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email.trim(), {
+        redirectTo: `${process.env.EXPO_PUBLIC_APP_URL}/reset-password`,
+      });
+      if (error) {
+        showMessage('Error', error.message);
+      } else {
+        showMessage('Success', 'Check your email for a reset link.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <FormProvider {...methods}>
       <View style={styles.container}>
-        <Text>TaskFlow</Text>
+        <Text>Reset Password</Text>
         <CustomTextInput
           name="email"
           label="Email"
@@ -53,28 +59,18 @@ export default function LoginScreen() {
           autoComplete="email"
           containerStyle={styles.inputContainer}
         />
-        <CustomTextInput
-          name="password"
-          label="Password"
-          placeholder="Password"
-          secureTextEntry
-          autoComplete="password"
-          containerStyle={styles.inputContainer}
-        />
-        <TouchableOpacity style={styles.button} onPress={methods.handleSubmit(handleLogin)}>
-          <Text style={styles.buttonText}>Login</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={methods.handleSubmit(handleSubmit)}
+          disabled={isLoading}
+        >
+          <Text style={styles.buttonText}>{isLoading ? 'Sending...' : 'Send Reset Link'}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.linkContainer}
-          onPress={() => router.push('/(auth)/register')}
+          onPress={() => router.push('/(auth)/login')}
         >
-          <Text style={styles.linkText}>Register</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.linkContainer}
-          onPress={() => router.push('/(auth)/forgot-password')}
-        >
-          <Text style={styles.linkText}>Forgot Password?</Text>
+          <Text style={styles.linkText}>Back to Login</Text>
         </TouchableOpacity>
       </View>
     </FormProvider>

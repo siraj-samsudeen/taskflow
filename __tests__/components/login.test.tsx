@@ -10,14 +10,7 @@ jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock('../../src/lib/supabase', () => ({
-  supabase: {
-    auth: {
-      signInWithPassword: jest.fn(),
-      onAuthStateChange: jest.fn(),
-    },
-  },
-}));
+jest.mock('../../src/lib/supabase');
 
 jest.mock('react-native-toast-message', () => ({
   show: jest.fn(),
@@ -27,15 +20,12 @@ import Toast from 'react-native-toast-message';
 
 describe('LoginScreen', () => {
   const mockPush = jest.fn();
+  const mockAuth = jest.mocked(supabase.auth);
 
   beforeEach(() => {
-    // resetAllMocks clears call history AND resets implementations
-    // (clearAllMocks only clears call history, leaving mockImplementation leaks between tests)
     jest.resetAllMocks();
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
-    (supabase.auth.onAuthStateChange as jest.Mock).mockReturnValue(
-      createAuthSubscription()
-    );
+    mockAuth.onAuthStateChange.mockReturnValue(createAuthSubscription());
   });
 
   describe('validation', () => {
@@ -51,9 +41,7 @@ describe('LoginScreen', () => {
 
   describe('submission', () => {
     it('calls signInWithPassword with credentials', async () => {
-      (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
-        error: null,
-      });
+      mockAuth.signInWithPassword.mockResolvedValue({ error: null } as any);
 
       render(<LoginScreen />);
       await submitLoginForm('test@example.com', 'password123');
@@ -65,9 +53,9 @@ describe('LoginScreen', () => {
     });
 
     it('shows error toast on invalid credentials', async () => {
-      (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
+      mockAuth.signInWithPassword.mockResolvedValue({
         error: { message: 'Invalid credentials' },
-      });
+      } as any);
 
       render(<LoginScreen />);
       await submitLoginForm('test@example.com', 'wrongpassword');

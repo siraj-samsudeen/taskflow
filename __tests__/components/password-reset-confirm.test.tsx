@@ -14,13 +14,7 @@ jest.mock('expo-linking', () => ({
   useLinkingURL: jest.fn(),
 }));
 
-jest.mock('../../src/lib/supabase', () => ({
-  supabase: {
-    auth: {
-      updateUser: jest.fn(),
-    },
-  },
-}));
+jest.mock('../../src/lib/supabase');
 
 jest.mock('react-native-toast-message', () => ({
   show: jest.fn(),
@@ -30,6 +24,7 @@ import Toast from 'react-native-toast-message';
 
 describe('PasswordResetConfirmScreen', () => {
   const mockPush = jest.fn();
+  const mockAuth = jest.mocked(supabase.auth);
 
   beforeEach(() => {
     jest.resetAllMocks();
@@ -80,16 +75,16 @@ describe('PasswordResetConfirmScreen', () => {
 
   describe('submission', () => {
     it('calls updateUser with new password on submit', async () => {
-      (supabase.auth.updateUser as jest.Mock).mockResolvedValue({ error: null });
+      mockAuth.updateUser.mockResolvedValue({ error: null } as any);
       render(<PasswordResetConfirmScreen />);
 
       await submitResetPasswordForm('newpassword123', 'newpassword123');
 
-      expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: 'newpassword123' });
+      expect(mockAuth.updateUser).toHaveBeenCalledWith({ password: 'newpassword123' });
     });
 
     it('shows success toast and navigates to login after password reset', async () => {
-      (supabase.auth.updateUser as jest.Mock).mockResolvedValue({ error: null });
+      mockAuth.updateUser.mockResolvedValue({ error: null } as any);
       render(<PasswordResetConfirmScreen />);
 
       await submitResetPasswordForm('newpassword123', 'newpassword123');
@@ -103,9 +98,9 @@ describe('PasswordResetConfirmScreen', () => {
     });
 
     it('shows error toast on API failure', async () => {
-      (supabase.auth.updateUser as jest.Mock).mockResolvedValue({
+      mockAuth.updateUser.mockResolvedValue({
         error: { message: 'Token expired' },
-      });
+      } as any);
       render(<PasswordResetConfirmScreen />);
 
       await submitResetPasswordForm('newpassword123', 'newpassword123');
@@ -119,7 +114,7 @@ describe('PasswordResetConfirmScreen', () => {
 
     it('disables button and shows loading text while submitting', async () => {
       let resolvePromise: (value: any) => void;
-      (supabase.auth.updateUser as jest.Mock).mockImplementation(
+      mockAuth.updateUser.mockImplementation(
         () => new Promise((resolve) => { resolvePromise = resolve; })
       );
       render(<PasswordResetConfirmScreen />);

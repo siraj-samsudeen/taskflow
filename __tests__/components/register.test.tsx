@@ -10,14 +10,7 @@ jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock('../../src/lib/supabase', () => ({
-  supabase: {
-    auth: {
-      signUp: jest.fn(),
-      onAuthStateChange: jest.fn(),
-    },
-  },
-}));
+jest.mock('../../src/lib/supabase');
 
 jest.mock('react-native-toast-message', () => ({
   show: jest.fn(),
@@ -27,15 +20,12 @@ import Toast from 'react-native-toast-message';
 
 describe('RegisterScreen', () => {
   const mockPush = jest.fn();
+  const mockAuth = jest.mocked(supabase.auth);
 
   beforeEach(() => {
-    // resetAllMocks clears call history AND resets implementations
-    // (clearAllMocks only clears call history, leaving mockImplementation leaks between tests)
     jest.resetAllMocks();
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
-    (supabase.auth.onAuthStateChange as jest.Mock).mockReturnValue(
-      createAuthSubscription()
-    );
+    mockAuth.onAuthStateChange.mockReturnValue(createAuthSubscription());
   });
 
   describe('validation', () => {
@@ -51,10 +41,7 @@ describe('RegisterScreen', () => {
 
   describe('submission', () => {
     it('calls signUp with credentials and shows success toast', async () => {
-      (supabase.auth.signUp as jest.Mock).mockResolvedValue({
-        data: {},
-        error: null,
-      });
+      mockAuth.signUp.mockResolvedValue({ data: {}, error: null } as any);
 
       render(<RegisterScreen />);
       await submitRegisterForm('test@example.com', 'password123', 'password123');

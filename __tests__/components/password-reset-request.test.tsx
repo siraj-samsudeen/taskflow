@@ -9,13 +9,7 @@ jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock('../../src/lib/supabase', () => ({
-  supabase: {
-    auth: {
-      resetPasswordForEmail: jest.fn(),
-    },
-  },
-}));
+jest.mock('../../src/lib/supabase');
 
 jest.mock('react-native-toast-message', () => ({
   show: jest.fn(),
@@ -25,6 +19,7 @@ import Toast from 'react-native-toast-message';
 
 describe('PasswordResetRequestScreen', () => {
   const mockPush = jest.fn();
+  const mockAuth = jest.mocked(supabase.auth);
 
   beforeEach(() => {
     jest.resetAllMocks();
@@ -44,7 +39,7 @@ describe('PasswordResetRequestScreen', () => {
 
   describe('submission', () => {
     it('calls resetPasswordForEmail with email and redirectTo', async () => {
-      (supabase.auth.resetPasswordForEmail as jest.Mock).mockResolvedValue({ error: null });
+      mockAuth.resetPasswordForEmail.mockResolvedValue({ error: null } as any);
       render(<PasswordResetRequestScreen />);
 
       await submitForgotPasswordForm('test@example.com');
@@ -55,7 +50,7 @@ describe('PasswordResetRequestScreen', () => {
     });
 
     it('shows success toast after email sent', async () => {
-      (supabase.auth.resetPasswordForEmail as jest.Mock).mockResolvedValue({ error: null });
+      mockAuth.resetPasswordForEmail.mockResolvedValue({ error: null } as any);
       render(<PasswordResetRequestScreen />);
 
       await submitForgotPasswordForm('test@example.com');
@@ -68,9 +63,9 @@ describe('PasswordResetRequestScreen', () => {
     });
 
     it('shows error toast on API failure', async () => {
-      (supabase.auth.resetPasswordForEmail as jest.Mock).mockResolvedValue({
+      mockAuth.resetPasswordForEmail.mockResolvedValue({
         error: { message: 'For security purposes, you can only request this once every 60 seconds' },
-      });
+      } as any);
       render(<PasswordResetRequestScreen />);
 
       await submitForgotPasswordForm('test@example.com');
@@ -84,7 +79,7 @@ describe('PasswordResetRequestScreen', () => {
 
     it('disables button and shows loading text while submitting', async () => {
       let resolvePromise: (value: any) => void;
-      (supabase.auth.resetPasswordForEmail as jest.Mock).mockImplementation(
+      mockAuth.resetPasswordForEmail.mockImplementation(
         () => new Promise((resolve) => { resolvePromise = resolve; })
       );
       render(<PasswordResetRequestScreen />);

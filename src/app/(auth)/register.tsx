@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FormProvider, useForm } from 'react-hook-form';
 import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { z } from 'zod';
+import { useRouter } from 'expo-router';
 
 import CustomTextInput from '../../components/CustomTextInput';
 import { supabase } from '../../lib/supabase';
@@ -20,6 +21,7 @@ const registerSchema = z
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterScreen() {
+  const router = useRouter();
   const methods = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: { email: '', password: '', confirmPassword: '' },
@@ -78,6 +80,12 @@ export default function RegisterScreen() {
         <TouchableOpacity style={styles.button} onPress={methods.handleSubmit(handleRegister)}>
           <Text style={styles.buttonText}>Register</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.linkContainer}
+          onPress={() => router.push('/(auth)/login')}
+        >
+          <Text style={styles.linkText}>Login</Text>
+        </TouchableOpacity>
       </View>
     </FormProvider>
   );
@@ -104,5 +112,13 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: '600',
+  },
+  linkContainer: {
+    marginTop: 15,
+  },
+  linkText: {
+    color: '#007AFF',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });

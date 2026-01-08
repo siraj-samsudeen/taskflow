@@ -39,7 +39,7 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 - [x] Create Sign Up screen
 - [ ] Create Forgot Password screen
 - [x] Add form validation (CustomTextInput + react-hook-form + zod)
-- [ ] Add navigation links between login/signup screens
+- [x] Add navigation links between login/signup screens
 
 ### 2.2 Auth State Management
 - [ ] Create AuthContext provider

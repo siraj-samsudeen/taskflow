@@ -1,4 +1,4 @@
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -87,6 +87,9 @@ describe('ForgotPasswordScreen', () => {
       expect(button.parent?.parent?.props.accessibilityState?.disabled).toBe(true);
 
       resolvePromise!({ error: null });
+      await waitFor(() => {
+        expect(screen.getByText('Send Reset Link')).toBeTruthy();
+      });
     });
   });
 

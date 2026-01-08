@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as Linking from 'expo-linking';
+import { useLinkingURL } from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -23,7 +23,7 @@ type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
-  const url = Linking.useURL();
+  const url = useLinkingURL();
   const [isLoading, setIsLoading] = useState(false);
 
   const showMessage = (title: string, message: string) => {
@@ -37,21 +37,15 @@ export default function ResetPasswordScreen() {
   useEffect(() => {
     if (!url) return;
     const hash = url.split('#')[1];
-    if (!hash) {
-      showMessage('Error', 'Invalid or expired reset link. Please request a new one.');
-      router.push('/(auth)/forgot-password');
-      return;
-    }
+    if (!hash) return;
     const params = new URLSearchParams(hash);
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
-    if (!accessToken || !refreshToken) {
-      showMessage('Error', 'Invalid or expired reset link. Please request a new one.');
+    const error = params.get('error');
+    if (error) {
+      const description = params.get('error_description')?.replace(/\+/g, ' ');
+      showMessage('Error', description || 'Invalid or expired reset link. Please request a new one.');
       router.push('/(auth)/forgot-password');
-      return;
     }
-    supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-  }, [url]);
+  }, [url, router]);
 
   const methods = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),

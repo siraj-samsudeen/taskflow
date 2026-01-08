@@ -45,7 +45,7 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 - [ ] Create AuthContext provider
 - [ ] Implement login function
 - [ ] Implement signup function
-- [ ] Implement logout function
+- [x] Implement logout function
 - [x] Add session persistence
 
 ### 2.3 Navigation Guards

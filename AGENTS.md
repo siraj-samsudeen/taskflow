@@ -14,3 +14,4 @@ src/contexts/   - React contexts (AuthContext)
 
 ## Learnings
 - use `npx expo install` to install the compatible versions of libraries
+- Test behavior, not presence : Don't write separate "renders X" tests when a behavioral test already exercises that element (e.g., pressing a button implicitly verifies it exists)

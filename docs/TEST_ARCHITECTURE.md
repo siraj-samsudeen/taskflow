@@ -56,18 +56,16 @@ Tests serve two distinct purposes that require different organization:
 
 ```
 __tests__/
-├── contracts/                          # Hard gate (human-owned, few, must never regress)
-│   ├── auth-routing.contract.test.ts   # Segment × Session → Redirect matrix
-│   └── auth-lifecycle.contract.test.ts # Subscription cleanup invariant
-├── components/                         # Local correctness (LLM-optimized)
-│   ├── login.test.tsx                  # LoginScreen validation + API
-│   └── register.test.tsx               # RegisterScreen validation + API
-├── smoke/                              # Optional: 1-2 happy path checks
-│   └── auth.smoke.test.ts              # "User can log in" - catches catastrophic breaks
-└── utils/                              # Shared test infrastructure
-    ├── auth-mocks.ts                   # Mock setup, trigger functions
-    ├── form-helpers.ts                 # Form interaction helpers
-    └── assertions.ts                   # Common assertions
+├── contracts/                              # Hard gate (human-owned, few, must never regress)
+│   ├── auth-routing.contract.test.tsx      # Segment × Session → Redirect matrix
+│   └── auth-lifecycle.contract.test.tsx    # Subscription cleanup invariant
+├── components/                             # Local correctness (LLM-optimized)
+│   ├── login.test.tsx                      # LoginScreen validation + API
+│   └── register.test.tsx                   # RegisterScreen validation + API
+├── smoke/                                  # Optional: 1-2 happy path checks (empty for now)
+└── utils/                                  # Shared test infrastructure
+    ├── auth-mocks.ts                       # createAuthSubscription, setupAuthStateChangeMock, triggerAuthEvent
+    └── form-helpers.ts                     # fillLoginForm, fillRegisterForm
 ```
 
 ---
@@ -89,18 +87,28 @@ __tests__/
 ```typescript
 import { render, screen, userEvent } from '@testing-library/react-native';
 import { Alert } from 'react-native';
-import LoginScreen from '@/app/(auth)/login';
-import { supabase } from '@/lib/supabase';
-import { setupSupabaseMock } from '../utils/auth-mocks';
+import LoginScreen from '../../src/app/(auth)/login';
+import { supabase } from '../../src/lib/supabase';
+import { createAuthSubscription } from '../utils/auth-mocks';
 import { fillLoginForm } from '../utils/form-helpers';
 
-jest.mock('@/lib/supabase');
+jest.mock('../../src/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      signInWithPassword: jest.fn(),
+      onAuthStateChange: jest.fn(),
+    },
+  },
+}));
+
 jest.spyOn(Alert, 'alert').mockImplementation();
 
 describe('LoginScreen', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    setupSupabaseMock();
+    (supabase.auth.onAuthStateChange as jest.Mock).mockReturnValue(
+      createAuthSubscription()
+    );
   });
 
   describe('validation', () => {
@@ -156,16 +164,26 @@ describe('LoginScreen', () => {
 - Don't import UI components unless testing integration boundaries
 - Human-reviewed when adding new dimensions
 
-**Example: auth-routing.contract.test.ts**
+**Example: auth-routing.contract.test.tsx**
 
 ```typescript
 import { render } from '@testing-library/react-native';
 import { useRouter, useSegments } from 'expo-router';
-import RootLayout from '@/app/_layout';
+import RootLayout from '../../src/app/_layout';
+import { supabase } from '../../src/lib/supabase';
 import { setupAuthStateChangeMock, triggerAuthEvent } from '../utils/auth-mocks';
 
-jest.mock('expo-router');
-jest.mock('@/lib/supabase');
+jest.mock('expo-router', () => ({
+  Slot: () => null,
+  useRouter: jest.fn(),
+  useSegments: jest.fn(),
+}));
+
+jest.mock('../../src/lib/supabase', () => ({
+  supabase: { auth: { onAuthStateChange: jest.fn() } },
+}));
+
+const SESSION = { user: { id: '123' } };
 
 describe('Auth Routing Contract', () => {
   const mockReplace = jest.fn();
@@ -175,27 +193,29 @@ describe('Auth Routing Contract', () => {
     (useRouter as jest.Mock).mockReturnValue({ replace: mockReplace });
   });
 
-  // IMPORTANT: Matrix is keyed by (segment, session), NOT by auth events.
+  // Matrix is keyed by (segment, session), NOT by auth events.
   // This mirrors production logic: RootLayout checks session + segments, not event strings.
-  // Using events as matrix dimensions would allow impossible states (e.g., SIGNED_IN + session=null).
   test.each([
-    // segment   | session   | expected redirect
-    ['(auth)',    'present',  '/'],                // authenticated user on auth page → home
-    ['(auth)',    null,       null],               // unauthenticated on auth → stay
-    ['(tabs)',    'present',  null],               // authenticated on tabs → stay
-    ['(tabs)',    null,       '/(auth)/login'],    // unauthenticated on tabs → login
-    ['',          'present',  null],               // authenticated on root → stay
-    ['',          null,       '/(auth)/login'],    // unauthenticated on root → login
+    // segment    | session  | expected redirect
+    ['(auth)',     SESSION,   '/'],
+    ['(auth)',     null,      null],
+    ['(tabs)',     SESSION,   null],
+    ['(tabs)',     null,      '/(auth)/login'],
+    ['',           SESSION,   null],
+    ['',           null,      '/(auth)/login'],
   ])(
-    '[%s] + session=%s → %s',
-    async (segment, sessionState, expectedRedirect) => {
+    '[%s] + session=%p → %s',
+    async (segment, session, expectedRedirect) => {
       (useSegments as jest.Mock).mockReturnValue(segment ? [segment] : []);
-      const getAuthCallback = setupAuthStateChangeMock();
-      const session = sessionState === 'present' ? { user: { id: '123' } } : null;
-      
+      const getAuthCallback = setupAuthStateChangeMock(supabase as any);
+
       render(<RootLayout />);
-      await triggerAuthEvent(getAuthCallback, session ? 'SIGNED_IN' : 'SIGNED_OUT', session);
-      
+      await triggerAuthEvent(
+        getAuthCallback,
+        session ? 'SIGNED_IN' : 'SIGNED_OUT',
+        session
+      );
+
       if (expectedRedirect) {
         expect(mockReplace).toHaveBeenCalledWith(expectedRedirect);
       } else {
@@ -207,27 +227,26 @@ describe('Auth Routing Contract', () => {
   // Loading gate: most regression-prone behavior in auth routing
   it('does not redirect while auth state is loading', () => {
     (useSegments as jest.Mock).mockReturnValue(['(tabs)']);
-    setupAuthStateChangeMock(); // callback exists but never triggered
-    
+    setupAuthStateChangeMock(supabase as any);
+
     render(<RootLayout />);
-    
-    // No redirect should happen before we know auth state
+
     expect(mockReplace).not.toHaveBeenCalled();
   });
 });
 ```
 
-**Example: auth-lifecycle.contract.test.ts**
+**Example: auth-lifecycle.contract.test.tsx**
 
 ```typescript
 describe('Auth Lifecycle Contract', () => {
   it('unsubscribes from auth listener on unmount', () => {
     const mockUnsubscribe = jest.fn();
-    setupAuthStateChangeMock({ unsubscribe: mockUnsubscribe });
-    
+    setupAuthStateChangeMock(supabase as any, { unsubscribe: mockUnsubscribe });
+
     const { unmount } = render(<RootLayout />);
     unmount();
-    
+
     expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
   });
 });
@@ -249,24 +268,32 @@ Keep test helpers small and focused. Explicit imports make dependencies traceabl
 
 **auth-mocks.ts**
 ```typescript
-import { supabase } from '@/lib/supabase';
 import { act } from '@testing-library/react-native';
 
+// Creates the subscription object structure that Supabase's onAuthStateChange returns.
 export function createAuthSubscription(unsubscribe = jest.fn()) {
   return { data: { subscription: { unsubscribe } } };
 }
 
-export function setupSupabaseMock() {
-  (supabase.auth.onAuthStateChange as jest.Mock).mockReturnValue(createAuthSubscription());
-}
-
-export function setupAuthStateChangeMock(options?: { unsubscribe?: jest.Mock }) {
-  let authCallback: (event: string, session: unknown) => void;
-  (supabase.auth.onAuthStateChange as jest.Mock).mockImplementation((callback) => {
+// Sets up onAuthStateChange mock to capture the callback for manual triggering.
+// Returns a getter function to access the captured callback after component renders.
+export function setupAuthStateChangeMock(
+  supabase: { auth: { onAuthStateChange: jest.Mock } },
+  options?: { unsubscribe?: jest.Mock }
+) {
+  let authCallback: ((event: string, session: unknown) => void) | undefined;
+  supabase.auth.onAuthStateChange.mockImplementation((callback) => {
     authCallback = callback;
     return createAuthSubscription(options?.unsubscribe);
   });
-  return () => authCallback;
+  return () => {
+    if (!authCallback) {
+      throw new Error(
+        'Auth callback not captured. Make sure the component is rendered and onAuthStateChange has been called.'
+      );
+    }
+    return authCallback;
+  };
 }
 
 export async function triggerAuthEvent(

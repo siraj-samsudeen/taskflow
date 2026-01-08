@@ -20,6 +20,9 @@
     "setupFilesAfterEnv": [
       "<rootDir>/jest.setup.js"
     ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/__tests__/utils/"
+    ],
     "collectCoverageFrom": [
       "src/**/*.{ts,tsx}",
       "!src/**/*.d.ts"

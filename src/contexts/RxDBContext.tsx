@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { getDatabase, type TaskFlowDatabase } from '../lib/rxdb';
 import { startReplication, stopReplication } from '../lib/rxdb-replication';
 
@@ -55,9 +55,7 @@ export function RxDBProvider({ children, enableReplication = true }: RxDBProvide
   }, [enableReplication]);
 
   return (
-    <RxDBContext.Provider value={{ db, isReady, isReplicating }}>
-      {children}
-    </RxDBContext.Provider>
+    <RxDBContext.Provider value={{ db, isReady, isReplicating }}>{children}</RxDBContext.Provider>
   );
 }
 

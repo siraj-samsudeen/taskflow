@@ -1,4 +1,4 @@
-import type { RxJsonSchema, RxCollectionCreator } from 'rxdb';
+import type { RxCollectionCreator, RxJsonSchema } from 'rxdb';
 
 export interface TeamMemberDoc {
   id: string;
@@ -113,7 +113,16 @@ const tasksSchema: RxJsonSchema<TaskDoc> = {
     isDeleted: { type: 'boolean' },
     modifiedAt: { type: 'string' },
   },
-  required: ['id', 'title', 'status', 'priority', 'created_at', 'updated_at', 'isDeleted', 'modifiedAt'],
+  required: [
+    'id',
+    'title',
+    'status',
+    'priority',
+    'created_at',
+    'updated_at',
+    'isDeleted',
+    'modifiedAt',
+  ],
 };
 
 export const collections: Record<string, RxCollectionCreator> = {

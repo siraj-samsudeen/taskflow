@@ -1,7 +1,7 @@
-import { replicateRxCollection, type RxReplicationState } from 'rxdb/plugins/replication';
 import type { RxCollection } from 'rxdb';
-import { supabase } from './supabase';
+import { type RxReplicationState, replicateRxCollection } from 'rxdb/plugins/replication';
 import type { TaskFlowDatabase } from './rxdb';
+import { supabase } from './supabase';
 
 type ReplicationStates = Map<string, RxReplicationState<unknown, unknown>>;
 
@@ -12,10 +12,9 @@ interface SupabaseCheckpoint {
   modifiedAt: string;
 }
 
-function createSupabaseReplication<T extends { id: string; modifiedAt: string; isDeleted: boolean }>(
-  collection: RxCollection<T>,
-  tableName: string
-): RxReplicationState<T, SupabaseCheckpoint> {
+function createSupabaseReplication<
+  T extends { id: string; modifiedAt: string; isDeleted: boolean },
+>(collection: RxCollection<T>, tableName: string): RxReplicationState<T, SupabaseCheckpoint> {
   const replication = replicateRxCollection<T, SupabaseCheckpoint>({
     collection,
     replicationIdentifier: `supabase-${tableName}`,
@@ -58,7 +57,7 @@ function createSupabaseReplication<T extends { id: string; modifiedAt: string; i
 
         if (lastCheckpoint) {
           query = query.or(
-            `_modified.gt.${lastCheckpoint.modifiedAt},and(_modified.eq.${lastCheckpoint.modifiedAt},id.gt.${lastCheckpoint.id})`
+            `_modified.gt.${lastCheckpoint.modifiedAt},and(_modified.eq.${lastCheckpoint.modifiedAt},id.gt.${lastCheckpoint.id})`,
           );
         }
 
@@ -70,13 +69,15 @@ function createSupabaseReplication<T extends { id: string; modifiedAt: string; i
 
         const documents = (data ?? []).map((doc) => {
           const { _deleted, _modified, ...rest } = doc;
+          const deleted = _deleted ?? false;
           return {
             ...rest,
             id: String(doc.id),
-            isDeleted: _deleted ?? false,
+            isDeleted: deleted,
             modifiedAt: _modified ?? new Date().toISOString(),
+            _deleted: deleted,
           };
-        }) as T[];
+        }) as (T & { _deleted: boolean })[];
 
         const checkpoint: SupabaseCheckpoint | undefined =
           documents.length > 0
@@ -121,6 +122,8 @@ export async function stopReplication(): Promise<void> {
   replicationStates.clear();
 }
 
-export function getReplicationState(tableName: string): RxReplicationState<unknown, unknown> | undefined {
+export function getReplicationState(
+  tableName: string,
+): RxReplicationState<unknown, unknown> | undefined {
   return replicationStates.get(tableName);
 }

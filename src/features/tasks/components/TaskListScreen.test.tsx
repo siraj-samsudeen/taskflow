@@ -1,8 +1,134 @@
-import { fireEvent, render, screen, userEvent } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, userEvent, waitFor } from '@testing-library/react-native';
+import { BehaviorSubject } from 'rxjs';
+import { useRxDBContext } from '../../../contexts/RxDBContext';
 import { TaskListScreen } from './TaskListScreen';
 
+jest.mock('../../../contexts/RxDBContext');
+
+const mockUseRxDBContext = useRxDBContext as jest.MockedFunction<typeof useRxDBContext>;
+
+const initialTasks = [
+  {
+    id: '1',
+    title: 'Set up project structure',
+    status: 'done',
+    created_at: '2024-01-01T00:00:00Z',
+  },
+  { id: '2', title: 'Implement task list UI', status: 'todo', created_at: '2024-01-02T00:00:00Z' },
+  {
+    id: '3',
+    title: 'Add toggle done functionality',
+    status: 'todo',
+    created_at: '2024-01-03T00:00:00Z',
+  },
+  { id: '4', title: 'Write tests', status: 'todo', created_at: '2024-01-04T00:00:00Z' },
+];
+
+interface MockTaskDoc {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  description: null;
+  priority: string;
+  project_id: null;
+  due_date: null;
+  assigned_to: null;
+  updated_at: string;
+  isDeleted: boolean;
+  modifiedAt: string;
+  toJSON: () => MockTaskDoc;
+}
+
+function createMockDb(tasksData = initialTasks) {
+  const createDoc = (t: (typeof tasksData)[0] & { isDeleted?: boolean }): MockTaskDoc => {
+    const doc: MockTaskDoc = {
+      ...t,
+      description: null,
+      priority: 'medium',
+      project_id: null,
+      due_date: null,
+      assigned_to: null,
+      updated_at: t.created_at,
+      isDeleted: t.isDeleted ?? false,
+      modifiedAt: t.created_at,
+      toJSON() {
+        return this;
+      },
+    };
+    return doc;
+  };
+
+  const tasksSubject = new BehaviorSubject<MockTaskDoc[]>(tasksData.map(createDoc));
+
+  const mockTasks = {
+    find: jest.fn().mockReturnValue({
+      $: tasksSubject.asObservable(),
+    }),
+    findOne: jest.fn().mockImplementation((id: string) => ({
+      exec: jest.fn().mockImplementation(async () => {
+        const task = tasksSubject.value.find((t) => t.id === id);
+        if (!task) return null;
+        return {
+          ...task,
+          patch: async (updates: Record<string, unknown>) => {
+            const current = tasksSubject.value;
+            const updated = current
+              .map((t) => {
+                if (t.id === id) {
+                  const updatedDoc: MockTaskDoc = {
+                    ...t,
+                    ...(updates as Partial<MockTaskDoc>),
+                    toJSON() {
+                      return this;
+                    },
+                  };
+                  return updatedDoc;
+                }
+                return t;
+              })
+              .filter((t) => !t.isDeleted);
+            tasksSubject.next(updated);
+          },
+        };
+      }),
+    })),
+    insert: jest.fn().mockImplementation(async (doc) => {
+      const current = tasksSubject.value;
+      const newDoc: MockTaskDoc = {
+        ...doc,
+        toJSON() {
+          return this;
+        },
+      };
+      tasksSubject.next([...current, newDoc]);
+      return newDoc;
+    }),
+  };
+
+  return {
+    tasks: mockTasks,
+    _tasksSubject: tasksSubject,
+  };
+}
+
 describe('TaskListScreen', () => {
-  it('defaults to Active tab showing only incomplete tasks', () => {
+  let mockDb: ReturnType<typeof createMockDb>;
+
+  beforeEach(() => {
+    mockDb = createMockDb();
+    mockUseRxDBContext.mockReturnValue({
+      db: mockDb as any,
+      isReady: true,
+      isReplicating: false,
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('defaults to Active tab showing only incomplete tasks', async () => {
     render(<TaskListScreen />);
 
     expect(screen.getByText('Implement task list UI')).toBeTruthy();
@@ -91,7 +217,9 @@ describe('TaskListScreen', () => {
     await user.type(input, 'My new task');
     fireEvent(input, 'submitEditing');
 
-    expect(input.props.value).toBe('');
+    await waitFor(() => {
+      expect(input.props.value).toBe('');
+    });
   });
 
   it('does not add a task when input is empty or whitespace', async () => {
@@ -191,9 +319,14 @@ describe('TaskListScreen', () => {
 
     await user.press(screen.getByLabelText('Edit Write tests'));
     const input = screen.getByLabelText('Edit task title');
-    fireEvent(input, 'blur');
 
-    expect(screen.queryByLabelText('Edit task title')).toBeNull();
+    await act(async () => {
+      fireEvent(input, 'blur');
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('Edit task title')).toBeNull();
+    });
     expect(screen.getByText('Write tests')).toBeTruthy();
   });
 });

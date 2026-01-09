@@ -1,4 +1,4 @@
-import type { TaskFlowDatabase, TaskFlowCollections } from '../rxdb';
+import type { TaskFlowCollections, TaskFlowDatabase } from '../rxdb';
 
 const mockCollection = {
   find: jest.fn().mockReturnValue({

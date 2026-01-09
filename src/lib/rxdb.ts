@@ -1,13 +1,13 @@
-import { createRxDatabase, type RxDatabase, type RxCollection, addRxPlugin } from 'rxdb';
+import { addRxPlugin, createRxDatabase, type RxCollection, type RxDatabase } from 'rxdb';
 import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
 import { getRxStorageMemory } from 'rxdb/plugins/storage-memory';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
 import {
-  collections,
-  type TeamMemberDoc,
   type ClientDoc,
+  collections,
   type ProjectDoc,
   type TaskDoc,
+  type TeamMemberDoc,
 } from './rxdb-schema';
 
 if (__DEV__) {

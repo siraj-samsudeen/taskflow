@@ -27,16 +27,16 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 - [x] Delete task
 
 ### 1.3 Database Schema
-- [ ] Create `tasks` table: id (uuid), title (text), done (boolean), created_at
-- [ ] No RLS yet (public access for now)
+- [x] Create `tasks` table: id (uuid), title (text), done (boolean), created_at
+- [x] No RLS yet (public access for now)
 
 ### 1.4 Repository Layer
-- [ ] `tasksRepository.ts`: getAll, create, update, delete
-- [ ] Unit tests for repository
+- [x] `tasksRepository.ts`: getAll, create, update, delete (replaced with RxDB reactive queries)
+- [x] Unit tests for repository
 
 ### 1.5 Connect UI to Database
-- [ ] Replace useState with repository calls
-- [ ] Loading states while fetching
+- [x] Replace useState with repository calls (using RxDB subscriptions)
+- [x] Loading states while fetching
 - [ ] Error handling (toast on failure)
 
 ### 1.6 Task Detail Screen
@@ -48,16 +48,16 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 
 ---
 
-## Phase 2: Tasks - Offline Support (PowerSync)
+## Phase 2: Tasks - Offline Support (RxDB)
 
-### 2.1 PowerSync Setup
-- [x] Install @powersync/react-native and dependencies
-- [x] Configure PowerSync schema for tasks table
-- [x] Set up PowerSync provider wrapper (SupabaseConnector)
-- [x] Configure sync rules
+### 2.1 RxDB Setup
+- [x] Install RxDB and required plugins (rxdb, rxdb/plugins/replication, storage-memory, validate-ajv)
+- [x] Configure RxDB schema for all tables (tasks, projects, clients, team_members)
+- [x] Set up RxDBProvider context wrapper
+- [x] Create Supabase replication layer (rxdb-replication.ts)
 
-### 2.2 Swap Repository to PowerSync
-- [ ] Repository reads/writes via PowerSync
+### 2.2 Swap Repository to RxDB
+- [x] Repository reads/writes via RxDB reactive queries
 - [ ] Verify offline: toggle airplane mode, make changes, reconnect
 
 ### 2.3 Tests
@@ -91,8 +91,8 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 ## Phase 4: Projects
 
 ### 4.1 Database Schema
-- [ ] Create `projects` table: id (uuid), name (text), description (text), status (text), created_at
-- [ ] Add to PowerSync schema + sync rules
+- [x] Create `projects` table: id (uuid), name (text), description (text), status (text), created_at
+- [x] Add to RxDB schema (already done in rxdb-schema.ts)
 
 ### 4.2 Project List Screen
 - [ ] Display list of projects (name, task count)
@@ -121,8 +121,8 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 ## Phase 5: Task → Project Relationship
 
 ### 5.1 Database Migration
-- [ ] Add `project_id` (nullable FK) to tasks table
-- [ ] Update PowerSync schema
+- [x] Add `project_id` (nullable FK) to tasks table
+- [x] Update RxDB schema (already done in rxdb-schema.ts)
 
 ### 5.2 UI Updates
 - [ ] Project selector dropdown in task form
@@ -139,9 +139,9 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 ## Phase 6: Clients
 
 ### 6.1 Database Schema
-- [ ] Create `clients` table: id (uuid), name (text), color (text), created_at
-- [ ] Add `client_id` (nullable FK) to projects table
-- [ ] Update PowerSync schema + sync rules
+- [x] Create `clients` table: id (uuid), name (text), color (text), created_at
+- [x] Add `client_id` (nullable FK) to projects table
+- [x] Update RxDB schema (already done in rxdb-schema.ts)
 
 ### 6.2 Client List Screen
 - [ ] Display list of clients (name, color badge, project count)
@@ -183,7 +183,7 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 - [x] Create `team_members` table (id, user_id, name, email, avatar_url)
 - [x] Enable RLS on all tables
 - [x] Create policies for team member access
-- [ ] Update PowerSync sync rules for user filtering
+- [ ] Update RxDB replication for user filtering
 
 ### 7.4 Form Validation
 - [x] Add react-hook-form + zod to auth forms
@@ -227,8 +227,8 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 ## Phase 9: Task Enhancements
 
 ### 9.1 Additional Task Fields
-- [ ] Add to schema: priority (text), due_date (date), assigned_to (uuid FK)
-- [ ] Update PowerSync schema
+- [x] Add to schema: priority (text), due_date (date), assigned_to (uuid FK)
+- [x] Update RxDB schema (already done in rxdb-schema.ts)
 
 ### 9.2 Task Form Enhancements
 - [ ] Priority picker (low/medium/high/urgent)

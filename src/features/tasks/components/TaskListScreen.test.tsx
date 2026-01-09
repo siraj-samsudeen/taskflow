@@ -1,4 +1,4 @@
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { fireEvent, render, screen, userEvent } from '@testing-library/react-native';
 import { TaskListScreen } from './TaskListScreen';
 
 describe('TaskListScreen', () => {
@@ -33,5 +33,39 @@ describe('TaskListScreen', () => {
     await user.press(checkbox);
 
     expect(checkbox.props.accessibilityState.checked).toBe(false);
+  });
+
+  it('adds a new task when submitting the input', async () => {
+    const user = userEvent.setup();
+    render(<TaskListScreen />);
+
+    const input = screen.getByPlaceholderText('Add a new task...');
+    await user.type(input, 'My new task');
+    fireEvent(input, 'submitEditing');
+
+    expect(screen.getByText('My new task')).toBeTruthy();
+  });
+
+  it('clears the input after adding a task', async () => {
+    const user = userEvent.setup();
+    render(<TaskListScreen />);
+
+    const input = screen.getByPlaceholderText('Add a new task...');
+    await user.type(input, 'My new task');
+    fireEvent(input, 'submitEditing');
+
+    expect(input.props.value).toBe('');
+  });
+
+  it('does not add a task when input is empty or whitespace', async () => {
+    const user = userEvent.setup();
+    render(<TaskListScreen />);
+
+    const input = screen.getByPlaceholderText('Add a new task...');
+    await user.type(input, '   ');
+    fireEvent(input, 'submitEditing');
+
+    const allTasks = screen.getAllByRole('checkbox');
+    expect(allTasks).toHaveLength(4);
   });
 });

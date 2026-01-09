@@ -1,16 +1,15 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
-
-import LoginScreen from '../../src/app/(auth)/login';
-import { useAuth } from '../../src/contexts/AuthContext';
-import { submitLoginForm } from '../utils/form-helpers';
+import { submitLoginForm } from '../../../../__tests__/utils/form-helpers';
+import { useAuth } from '../../../contexts/AuthContext';
+import { LoginScreen } from './LoginScreen';
 
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock('../../src/contexts/AuthContext', () => ({
+jest.mock('../../../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 

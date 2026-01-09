@@ -1,17 +1,15 @@
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
-
-import PasswordResetRequestScreen from '../../src/app/(auth)/password-reset-request';
-import { supabase } from '../../src/lib/supabase';
-import { submitForgotPasswordForm } from '../utils/form-helpers';
+import Toast from 'react-native-toast-message';
+import { submitForgotPasswordForm } from '../../../../__tests__/utils/form-helpers';
+import { supabase } from '../../../lib/supabase';
+import { PasswordResetRequestScreen } from './PasswordResetRequestScreen';
 
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock('../../src/lib/supabase');
-
-import Toast from 'react-native-toast-message';
+jest.mock('../../../lib/supabase');
 
 describe('PasswordResetRequestScreen', () => {
   const mockPush = jest.fn();

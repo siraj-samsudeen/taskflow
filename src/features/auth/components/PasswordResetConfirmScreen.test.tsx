@@ -1,10 +1,10 @@
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { useLinkingURL } from 'expo-linking';
 import { useRouter } from 'expo-router';
-
-import PasswordResetConfirmScreen from '../../src/app/(auth)/password-reset-confirm';
-import { supabase } from '../../src/lib/supabase';
-import { submitResetPasswordForm } from '../utils/form-helpers';
+import Toast from 'react-native-toast-message';
+import { submitResetPasswordForm } from '../../../../__tests__/utils/form-helpers';
+import { supabase } from '../../../lib/supabase';
+import { PasswordResetConfirmScreen } from './PasswordResetConfirmScreen';
 
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
@@ -14,9 +14,7 @@ jest.mock('expo-linking', () => ({
   useLinkingURL: jest.fn(),
 }));
 
-jest.mock('../../src/lib/supabase');
-
-import Toast from 'react-native-toast-message';
+jest.mock('../../../lib/supabase');
 
 describe('PasswordResetConfirmScreen', () => {
   const mockPush = jest.fn();

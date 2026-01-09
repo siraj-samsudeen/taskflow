@@ -17,15 +17,20 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 - [x] Install Expo Router
 
 ### 1.2 Task List Screen
-- [ ] Display list of tasks (title, checkbox)
-- [ ] "Add Task" floating button → navigates to form
-- [ ] Tap checkbox toggles done state
-- [ ] Tap task row → edit screen
+- [ ] Display list of tasks (checkbox + title, done = strikethrough + dimmed)
+- [ ] Tabs: All / Active (default, shows count) / Done
+- [ ] Quick add input at top (always visible)
+- [ ] Sorting: Active tasks first (newest → oldest), Done tasks below (newest → oldest)
+- [ ] Tap checkbox → toggle done state
+- [ ] Tap row → inline edit mode ([✓] save, [🗑] delete, [⋯] detail)
+- [ ] Long-press row → navigate to detail screen
+- [ ] Empty state: "No tasks yet" message
 
-### 1.3 Task Form Screen
-- [ ] Single text input: title (required)
+### 1.3 Task Detail Screen
+- [ ] Title input (pre-filled)
 - [ ] Save button → returns to list
-- [ ] Delete button (edit mode only)
+- [ ] Delete button → removes task, returns to list
+- [ ] (Future: project picker, priority, due date)
 
 ### 1.4 Local State
 - [ ] useState for tasks array
@@ -33,7 +38,8 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 
 ### 1.5 Tests
 - [ ] Task list rendering tests
-- [ ] Add/edit/delete task tests
+- [ ] Toggle done, add, edit, delete task tests
+- [ ] Tab filtering tests
 
 **Done when:** Add, edit, complete, delete tasks in UI.
 

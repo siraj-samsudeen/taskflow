@@ -1,16 +1,15 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
-
-import RegisterScreen from '../../src/app/(auth)/register';
-import { useAuth } from '../../src/contexts/AuthContext';
-import { submitRegisterForm } from '../utils/form-helpers';
+import { submitRegisterForm } from '../../../../__tests__/utils/form-helpers';
+import { useAuth } from '../../../contexts/AuthContext';
+import { RegisterScreen } from './RegisterScreen';
 
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock('../../src/contexts/AuthContext', () => ({
+jest.mock('../../../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 
@@ -47,6 +46,21 @@ describe('RegisterScreen', () => {
         type: 'success',
         text1: 'Success',
         text2: 'Check your email to confirm your account',
+      });
+    });
+
+    it('shows error toast on signup failure', async () => {
+      mockSignup.mockResolvedValue({
+        error: { message: 'Email already registered' },
+      });
+
+      render(<RegisterScreen />);
+      await submitRegisterForm('test@example.com', 'password123', 'password123');
+
+      expect(Toast.show).toHaveBeenCalledWith({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Email already registered',
       });
     });
   });

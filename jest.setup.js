@@ -12,6 +12,14 @@ jest.mock('react-native-toast-message', () => {
   return MockToast;
 });
 
+jest.mock('./src/lib/rxdb', () => require('./src/lib/__mocks__/rxdb'));
+
+jest.mock('./src/lib/rxdb-replication', () => ({
+  startReplication: jest.fn().mockResolvedValue(undefined),
+  stopReplication: jest.fn().mockResolvedValue(undefined),
+  getReplicationState: jest.fn().mockReturnValue(undefined),
+}));
+
 if (typeof global.structuredClone === 'undefined') {
   global.structuredClone = (object) => JSON.parse(JSON.stringify(object));
 }

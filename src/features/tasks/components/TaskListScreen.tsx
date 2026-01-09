@@ -1,30 +1,50 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import type { Task } from '../../../types';
+import { useRxDBContext } from '../../../contexts/RxDBContext';
+import type { TaskDoc } from '../../../lib/rxdb-schema';
 import { TaskItem } from './TaskItem';
 
 type FilterTab = 'all' | 'active' | 'done';
 
-const INITIAL_TASKS: Task[] = [
-  { id: '1', title: 'Set up project structure', done: true, created_at: '2024-01-01T10:00:00Z' },
-  { id: '2', title: 'Implement task list UI', done: false, created_at: '2024-01-02T10:00:00Z' },
-  {
-    id: '3',
-    title: 'Add toggle done functionality',
-    done: false,
-    created_at: '2024-01-03T10:00:00Z',
-  },
-  { id: '4', title: 'Write tests', done: false, created_at: '2024-01-04T10:00:00Z' },
-];
+interface DisplayTask {
+  id: string;
+  title: string;
+  done: boolean;
+  created_at: string;
+}
+
+function toDisplayTask(doc: TaskDoc): DisplayTask {
+  return {
+    id: doc.id,
+    title: doc.title,
+    done: doc.status === 'done',
+    created_at: doc.created_at,
+  };
+}
 
 export function TaskListScreen() {
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const { db, isReady } = useRxDBContext();
+  const [tasks, setTasks] = useState<DisplayTask[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('active');
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!db || !isReady) return;
+
+    const subscription = db.tasks
+      .find({
+        selector: { isDeleted: false },
+      })
+      .$.subscribe((docs) => {
+        setTasks(docs.map((d) => toDisplayTask(d.toJSON())));
+      });
+
+    return () => subscription.unsubscribe();
+  }, [db, isReady]);
+
   const { activeTasks, doneTasks } = useMemo(() => {
-    const sortByNewest = (a: Task, b: Task) =>
+    const sortByNewest = (a: DisplayTask, b: DisplayTask) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     return {
       activeTasks: tasks.filter((t) => !t.done).sort(sortByNewest),
@@ -38,22 +58,38 @@ export function TaskListScreen() {
     return [...activeTasks, ...doneTasks];
   }, [activeTab, activeTasks, doneTasks]);
 
-  const handleToggleDone = (id: string) => {
-    setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, done: !task.done } : task)));
+  const handleToggleDone = async (id: string) => {
+    if (!db) return;
+    const doc = await db.tasks.findOne(id).exec();
+    if (doc) {
+      await doc.patch({
+        status: doc.status === 'done' ? 'todo' : 'done',
+        updated_at: new Date().toISOString(),
+        modifiedAt: new Date().toISOString(),
+      });
+    }
   };
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     const trimmedTitle = newTaskTitle.trim();
-    if (!trimmedTitle) return;
+    if (!trimmedTitle || !db) return;
 
-    const newTask: Task = {
-      id: Date.now().toString(),
+    const now = new Date().toISOString();
+    await db.tasks.insert({
+      id: crypto.randomUUID(),
       title: trimmedTitle,
-      done: false,
-      created_at: new Date().toISOString(),
-    };
+      description: null,
+      status: 'todo',
+      priority: 'medium',
+      project_id: null,
+      due_date: null,
+      assigned_to: null,
+      created_at: now,
+      updated_at: now,
+      isDeleted: false,
+      modifiedAt: now,
+    });
 
-    setTasks((prev) => [newTask, ...prev]);
     setNewTaskTitle('');
   };
 
@@ -61,18 +97,40 @@ export function TaskListScreen() {
     setEditingTaskId(id);
   };
 
-  const handleSaveEdit = (id: string, newTitle: string) => {
+  const handleSaveEdit = async (id: string, newTitle: string) => {
     const trimmed = newTitle.trim();
-    if (trimmed) {
-      setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, title: trimmed } : task)));
+    if (trimmed && db) {
+      const doc = await db.tasks.findOne(id).exec();
+      if (doc) {
+        await doc.patch({
+          title: trimmed,
+          updated_at: new Date().toISOString(),
+          modifiedAt: new Date().toISOString(),
+        });
+      }
     }
     setEditingTaskId(null);
   };
 
-  const handleDeleteTask = (id: string) => {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
+  const handleDeleteTask = async (id: string) => {
+    if (!db) return;
+    const doc = await db.tasks.findOne(id).exec();
+    if (doc) {
+      await doc.patch({
+        isDeleted: true,
+        modifiedAt: new Date().toISOString(),
+      });
+    }
     setEditingTaskId(null);
   };
+
+  if (!isReady) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

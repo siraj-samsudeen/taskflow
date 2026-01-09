@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import Toast from 'react-native-toast-message';
 
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import { RxDBProvider } from '../contexts/RxDBContext';
 
 function RootLayoutNav() {
   const { session, isLoading, authEvent } = useAuth();
@@ -38,7 +39,9 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <RxDBProvider>
+        <RootLayoutNav />
+      </RxDBProvider>
     </AuthProvider>
   );
 }

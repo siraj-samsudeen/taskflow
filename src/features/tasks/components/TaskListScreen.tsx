@@ -22,18 +22,20 @@ export function TaskListScreen() {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('active');
 
-  const activeCount = useMemo(() => tasks.filter((t) => !t.done).length, [tasks]);
+  const { activeTasks, doneTasks } = useMemo(() => {
+    const sortByNewest = (a: Task, b: Task) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    return {
+      activeTasks: tasks.filter((t) => !t.done).sort(sortByNewest),
+      doneTasks: tasks.filter((t) => t.done).sort(sortByNewest),
+    };
+  }, [tasks]);
 
   const filteredTasks = useMemo(() => {
-    switch (activeTab) {
-      case 'active':
-        return tasks.filter((t) => !t.done);
-      case 'done':
-        return tasks.filter((t) => t.done);
-      default:
-        return tasks;
-    }
-  }, [tasks, activeTab]);
+    if (activeTab === 'active') return activeTasks;
+    if (activeTab === 'done') return doneTasks;
+    return [...activeTasks, ...doneTasks];
+  }, [activeTab, activeTasks, doneTasks]);
 
   const handleToggleDone = (id: string) => {
     setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, done: !task.done } : task)));
@@ -92,7 +94,7 @@ export function TaskListScreen() {
           accessibilityState={{ selected: activeTab === 'active' }}
         >
           <Text style={[styles.tabText, activeTab === 'active' && styles.tabTextActive]}>
-            Active ({activeCount})
+            Active ({activeTasks.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity

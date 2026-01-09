@@ -118,4 +118,21 @@ describe('TaskListScreen', () => {
 
     expect(screen.getByText('Active (2)')).toBeTruthy();
   });
+
+  it('sorts tasks with active first (newest to oldest), then done (newest to oldest)', async () => {
+    const user = userEvent.setup();
+    render(<TaskListScreen />);
+
+    await user.press(screen.getByText('All'));
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    const taskOrder = checkboxes.map((cb) => cb.props.accessibilityLabel.replace('Toggle ', ''));
+
+    expect(taskOrder).toEqual([
+      'Write tests',
+      'Add toggle done functionality',
+      'Implement task list UI',
+      'Set up project structure',
+    ]);
+  });
 });

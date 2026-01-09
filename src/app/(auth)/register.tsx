@@ -1,35 +1,21 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider } from 'react-hook-form';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { z } from 'zod';
 
 import CustomTextInput from '../../components/CustomTextInput';
 import { useAuth } from '../../contexts/AuthContext';
-
-const registerSchema = z
-  .object({
-    email: z.email({ message: 'Please enter a valid email' }),
-    password: z.string({ message: 'Password is required' }),
-    confirmPassword: z.string({ message: 'Confirm password is required' }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
-
-type RegisterForm = z.infer<typeof registerSchema>;
+import { type RegisterFormValues, registerSchema } from '../../features/auth/schemas/authSchemas';
+import { useZodForm } from '../../features/shared/form/useZodForm';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { signup } = useAuth();
-  const methods = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
+  const methods = useZodForm(registerSchema, {
     defaultValues: { email: '', password: '', confirmPassword: '' },
   });
 
-  const handleRegister = async (data: RegisterForm) => {
+  const handleRegister = async (data: RegisterFormValues) => {
     const { error } = await signup(data.email.trim(), data.password);
 
     if (error) {

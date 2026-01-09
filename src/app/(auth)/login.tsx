@@ -1,29 +1,21 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider } from 'react-hook-form';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { z } from 'zod';
 
 import CustomTextInput from '../../components/CustomTextInput';
 import { useAuth } from '../../contexts/AuthContext';
-
-const loginSchema = z.object({
-  email: z.email({ message: 'Please enter a valid email' }),
-  password: z.string({ message: 'Password is required' }),
-});
-
-type LoginForm = z.infer<typeof loginSchema>;
+import { type LoginFormValues, loginSchema } from '../../features/auth/schemas/authSchemas';
+import { useZodForm } from '../../features/shared/form/useZodForm';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
-  const methods = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
+  const methods = useZodForm(loginSchema, {
     defaultValues: { email: '', password: '' },
   });
 
-  const handleLogin = async (data: LoginForm) => {
+  const handleLogin = async (data: LoginFormValues) => {
     const { error } = await login(data.email.trim(), data.password);
 
     if (error) {

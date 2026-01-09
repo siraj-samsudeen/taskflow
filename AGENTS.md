@@ -8,6 +8,7 @@ Expo (React Native) + Supabase + PowerSync (offline-first sync)
 ## Structure
 
 See [docs/STRUCTURE.md](docs/STRUCTURE.md) for full details.
+See [docs/DATA_MODELS.md](docs/DATA_MODELS.md) for type definitions.
 
 ```
 src/app/           - Expo Router (thin route files only)
@@ -44,3 +45,9 @@ __tests__/utils/     - Shared test utilities
 ## Learnings
 - use `npx expo install` to install the compatible versions of libraries
 - Test behavior, not presence : Don't write separate "renders X" tests when a behavioral test already exercises that element (e.g., pressing a button implicitly verifies it exists)
+
+## Execution Order of Tasks in Spec
+
+Work through features in order (2 → 3 → 4 → 5 → 6 → 7), completing each vertical slice before moving to the next.
+
+Within each feature, follow the sub-tasks in order — each builds on the previous.

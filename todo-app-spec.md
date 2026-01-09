@@ -20,7 +20,7 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 - [x] Display list of tasks (checkbox + title, done = strikethrough + dimmed)
 - [x] Tap checkbox → toggle done state
 - [x] Quick add input at top (always visible)
-- [ ] Tabs: All / Active (default, shows count) / Done
+- [x] Tabs: All / Active (default, shows count) / Done
 - [ ] Sorting: Active tasks first (newest → oldest), Done tasks below (newest → oldest)
 - [ ] Tap row → inline edit mode ([✓] save, [🗑] delete, [⋯] detail)
 - [ ] Delete task

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import type { Task } from '../../../types';
 import { TaskItem } from './TaskItem';
+
+type FilterTab = 'all' | 'active' | 'done';
 
 const INITIAL_TASKS: Task[] = [
   { id: '1', title: 'Set up project structure', done: true, created_at: '2024-01-01T10:00:00Z' },
@@ -18,6 +20,20 @@ const INITIAL_TASKS: Task[] = [
 export function TaskListScreen() {
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [activeTab, setActiveTab] = useState<FilterTab>('active');
+
+  const activeCount = useMemo(() => tasks.filter((t) => !t.done).length, [tasks]);
+
+  const filteredTasks = useMemo(() => {
+    switch (activeTab) {
+      case 'active':
+        return tasks.filter((t) => !t.done);
+      case 'done':
+        return tasks.filter((t) => t.done);
+      default:
+        return tasks;
+    }
+  }, [tasks, activeTab]);
 
   const handleToggleDone = (id: string) => {
     setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, done: !task.done } : task)));
@@ -60,8 +76,36 @@ export function TaskListScreen() {
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
       </View>
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'all' && styles.tabActive]}
+          onPress={() => setActiveTab('all')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'all' }}
+        >
+          <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>All</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'active' && styles.tabActive]}
+          onPress={() => setActiveTab('active')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'active' }}
+        >
+          <Text style={[styles.tabText, activeTab === 'active' && styles.tabTextActive]}>
+            Active ({activeCount})
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'done' && styles.tabActive]}
+          onPress={() => setActiveTab('done')}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'done' }}
+        >
+          <Text style={[styles.tabText, activeTab === 'done' && styles.tabTextActive]}>Done</Text>
+        </TouchableOpacity>
+      </View>
       <FlatList
-        data={tasks}
+        data={filteredTasks}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <TaskItem task={item} onToggleDone={handleToggleDone} />}
       />
@@ -109,5 +153,28 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     lineHeight: 26,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e5e5',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  tabActive: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#007AFF',
+  },
+  tabText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  tabTextActive: {
+    color: '#007AFF',
+    fontWeight: '600',
   },
 });

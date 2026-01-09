@@ -17,10 +17,11 @@ jest.mock('../../src/lib/supabase', () => ({
 }));
 
 describe('HomeScreen', () => {
-  it('renders task list', () => {
+  it('renders task list with Active tab by default', () => {
     render(<HomeScreen />);
 
-    expect(screen.getByText('Set up project structure')).toBeTruthy();
+    expect(screen.getByText('Implement task list UI')).toBeTruthy();
+    expect(screen.getByText(/Active/)).toBeTruthy();
   });
 
   it('displays logged-in user email', async () => {

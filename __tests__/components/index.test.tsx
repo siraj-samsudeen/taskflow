@@ -3,32 +3,31 @@ import { render, screen, userEvent, waitFor } from '@testing-library/react-nativ
 import HomeScreen from '../../src/app/index';
 import { supabase } from '../../src/lib/supabase';
 
+jest.mock('react-native-safe-area-context', () => ({
+  SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 jest.mock('../../src/lib/supabase', () => ({
   supabase: {
     auth: {
-      getUser: jest.fn(),
+      getUser: jest.fn().mockResolvedValue({ data: { user: { email: 'test@example.com' } } }),
       signOut: jest.fn(),
-      onAuthStateChange: jest.fn(),
     },
   },
 }));
 
 describe('HomeScreen', () => {
-  beforeEach(() => {
-    jest.resetAllMocks();
-    jest.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: { email: 'test@example.com' } },
-    } as any);
-    jest.mocked(supabase.auth.onAuthStateChange).mockReturnValue({
-      data: { subscription: { unsubscribe: jest.fn() } },
-    } as any);
+  it('renders task list', () => {
+    render(<HomeScreen />);
+
+    expect(screen.getByText('Set up project structure')).toBeTruthy();
   });
 
-  it('renders welcome message', async () => {
+  it('displays logged-in user email', async () => {
     render(<HomeScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText('Welcome to TaskFlow')).toBeTruthy();
+      expect(screen.getByText('test@example.com')).toBeTruthy();
     });
   });
 

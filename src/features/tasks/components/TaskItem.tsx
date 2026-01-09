@@ -1,14 +1,82 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import type { Task } from '../../../types';
 
 interface TaskItemProps {
   task: Task;
+  isEditing?: boolean;
   onToggleDone: (id: string) => void;
+  onStartEdit?: (id: string) => void;
+  onSaveEdit?: (id: string, newTitle: string) => void;
+  onDelete?: (id: string) => void;
 }
 
-export function TaskItem({ task, onToggleDone }: TaskItemProps) {
+export function TaskItem({
+  task,
+  isEditing = false,
+  onToggleDone,
+  onStartEdit,
+  onSaveEdit,
+  onDelete,
+}: TaskItemProps) {
+  const [editTitle, setEditTitle] = useState(task.title);
+
+  const handleRowPress = () => {
+    if (!isEditing && onStartEdit) {
+      onStartEdit(task.id);
+    }
+  };
+
+  const handleSave = () => {
+    onSaveEdit?.(task.id, editTitle);
+  };
+
+  const handleDelete = () => {
+    onDelete?.(task.id);
+  };
+
+  if (isEditing) {
+    return (
+      <View style={[styles.container, styles.containerEditing]}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={handleSave}
+          accessibilityLabel="Save task"
+          accessibilityRole="button"
+        >
+          <Text style={styles.actionButtonText}>✓</Text>
+        </TouchableOpacity>
+        <TextInput
+          style={styles.editInput}
+          value={editTitle}
+          onChangeText={setEditTitle}
+          onSubmitEditing={handleSave}
+          onBlur={handleSave}
+          autoFocus
+          selectTextOnFocus
+          returnKeyType="done"
+          accessibilityLabel="Edit task title"
+        />
+        <TouchableOpacity
+          style={[styles.actionButton, styles.deleteButton]}
+          onPress={handleDelete}
+          accessibilityLabel="Delete task"
+          accessibilityRole="button"
+        >
+          <Text style={styles.actionButtonText}>🗑</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={handleRowPress}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={`Edit ${task.title}`}
+    >
       <TouchableOpacity
         style={styles.checkbox}
         onPress={() => onToggleDone(task.id)}
@@ -21,7 +89,7 @@ export function TaskItem({ task, onToggleDone }: TaskItemProps) {
         </View>
       </TouchableOpacity>
       <Text style={[styles.title, task.done && styles.titleDone]}>{task.title}</Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -34,6 +102,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e5e5',
+  },
+  containerEditing: {
+    backgroundColor: '#f0f8ff',
+    borderLeftWidth: 3,
+    borderLeftColor: '#007AFF',
   },
   checkbox: {
     marginRight: 12,
@@ -63,5 +136,30 @@ const styles = StyleSheet.create({
   titleDone: {
     textDecorationLine: 'line-through',
     opacity: 0.5,
+  },
+  editInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: '#fff',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    marginHorizontal: 8,
+  },
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteButton: {
+    backgroundColor: '#FF3B30',
+  },
+  actionButtonText: {
+    fontSize: 16,
   },
 });

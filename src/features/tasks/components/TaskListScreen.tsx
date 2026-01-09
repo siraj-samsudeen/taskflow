@@ -21,6 +21,7 @@ export function TaskListScreen() {
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('active');
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
   const { activeTasks, doneTasks } = useMemo(() => {
     const sortByNewest = (a: Task, b: Task) =>
@@ -54,6 +55,23 @@ export function TaskListScreen() {
 
     setTasks((prev) => [newTask, ...prev]);
     setNewTaskTitle('');
+  };
+
+  const handleStartEdit = (id: string) => {
+    setEditingTaskId(id);
+  };
+
+  const handleSaveEdit = (id: string, newTitle: string) => {
+    const trimmed = newTitle.trim();
+    if (trimmed) {
+      setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, title: trimmed } : task)));
+    }
+    setEditingTaskId(null);
+  };
+
+  const handleDeleteTask = (id: string) => {
+    setTasks((prev) => prev.filter((task) => task.id !== id));
+    setEditingTaskId(null);
   };
 
   return (
@@ -109,7 +127,16 @@ export function TaskListScreen() {
       <FlatList
         data={filteredTasks}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <TaskItem task={item} onToggleDone={handleToggleDone} />}
+        renderItem={({ item }) => (
+          <TaskItem
+            task={item}
+            isEditing={editingTaskId === item.id}
+            onToggleDone={handleToggleDone}
+            onStartEdit={handleStartEdit}
+            onSaveEdit={handleSaveEdit}
+            onDelete={handleDeleteTask}
+          />
+        )}
       />
     </View>
   );

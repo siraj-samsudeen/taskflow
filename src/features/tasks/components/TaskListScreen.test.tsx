@@ -135,4 +135,65 @@ describe('TaskListScreen', () => {
       'Set up project structure',
     ]);
   });
+
+  it('enters inline edit mode when row is tapped', async () => {
+    const user = userEvent.setup();
+    render(<TaskListScreen />);
+
+    await user.press(screen.getByLabelText('Edit Write tests'));
+
+    expect(screen.getByLabelText('Edit task title')).toBeTruthy();
+    expect(screen.getByLabelText('Save task')).toBeTruthy();
+    expect(screen.getByLabelText('Delete task')).toBeTruthy();
+  });
+
+  it('saves edited task title when save button is pressed', async () => {
+    const user = userEvent.setup();
+    render(<TaskListScreen />);
+
+    await user.press(screen.getByLabelText('Edit Write tests'));
+    const input = screen.getByLabelText('Edit task title');
+    fireEvent.changeText(input, 'Updated task title');
+    await user.press(screen.getByLabelText('Save task'));
+
+    expect(screen.getByText('Updated task title')).toBeTruthy();
+    expect(screen.queryByText('Write tests')).toBeNull();
+  });
+
+  it('deletes task when delete button is pressed', async () => {
+    const user = userEvent.setup();
+    render(<TaskListScreen />);
+
+    expect(screen.getByText('Active (3)')).toBeTruthy();
+
+    await user.press(screen.getByLabelText('Edit Write tests'));
+    await user.press(screen.getByLabelText('Delete task'));
+
+    expect(screen.queryByText('Write tests')).toBeNull();
+    expect(screen.getByText('Active (2)')).toBeTruthy();
+  });
+
+  it('does not save empty task title on blur', async () => {
+    const user = userEvent.setup();
+    render(<TaskListScreen />);
+
+    await user.press(screen.getByLabelText('Edit Write tests'));
+    const input = screen.getByLabelText('Edit task title');
+    fireEvent.changeText(input, '');
+    fireEvent(input, 'blur');
+
+    expect(screen.getByText('Write tests')).toBeTruthy();
+  });
+
+  it('exits edit mode on blur', async () => {
+    const user = userEvent.setup();
+    render(<TaskListScreen />);
+
+    await user.press(screen.getByLabelText('Edit Write tests'));
+    const input = screen.getByLabelText('Edit task title');
+    fireEvent(input, 'blur');
+
+    expect(screen.queryByLabelText('Edit task title')).toBeNull();
+    expect(screen.getByText('Write tests')).toBeTruthy();
+  });
 });

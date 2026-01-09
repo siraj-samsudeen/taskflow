@@ -22,10 +22,13 @@ A cross-platform todo/project management app for a 2-person dev team to manage t
 - [x] Quick add input at top (always visible)
 - [x] Tabs: All / Active (default, shows count) / Done
 - [x] Sorting: Active tasks first (newest → oldest), Done tasks below (newest → oldest)
-- [ ] Tap row → inline edit mode ([✓] save, [🗑] delete, [⋯] detail)
-- [ ] Delete task
+- [x] Tap row → inline edit mode ([✓] save, [🗑] delete)
+- [x] Delete task
 - [ ] Long-press row → navigate to detail screen
 - [ ] Empty state: "No tasks yet" message
+
+#### Known Bugs
+- [ ] **Bug:** onBlur / Esc key not working on iPhone to save/exit inline edit mode
 
 ### 1.3 Task Detail Screen
 - [ ] Title input (pre-filled)

@@ -17,7 +17,29 @@ jest.mock('./src/lib/instant', () => ({
     useAuth: jest.fn().mockReturnValue({ isLoading: false, user: null, error: null }),
     useQuery: jest.fn().mockReturnValue({ isLoading: false, data: null }),
     transact: jest.fn(),
-    tx: new Proxy({}, { get: () => new Proxy({}, { get: () => () => ({}) }) }),
+    tx: new Proxy(
+      {},
+      {
+        get: () =>
+          new Proxy(
+            {},
+            {
+              get: () =>
+                new Proxy(
+                  {},
+                  {
+                    get: (target, prop) => {
+                      if (prop === 'update' || prop === 'delete') {
+                        return jest.fn().mockReturnValue({});
+                      }
+                      return new Proxy({}, { get: () => jest.fn().mockReturnValue({}) });
+                    },
+                  }
+                ),
+            }
+          ),
+      }
+    ),
     auth: {
       sendMagicCode: jest.fn().mockResolvedValue(undefined),
       signInWithMagicCode: jest.fn().mockResolvedValue(undefined),
@@ -30,3 +52,6 @@ jest.mock('./src/lib/instant', () => ({
 if (typeof global.structuredClone === 'undefined') {
   global.structuredClone = (object) => JSON.parse(JSON.stringify(object));
 }
+
+// Add react-native-testing-library matchers
+import '@testing-library/react-native/matchers';

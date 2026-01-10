@@ -12,12 +12,19 @@ jest.mock('react-native-toast-message', () => {
   return MockToast;
 });
 
-jest.mock('./src/lib/rxdb', () => require('./src/lib/__mocks__/rxdb'));
-
-jest.mock('./src/lib/rxdb-replication', () => ({
-  startReplication: jest.fn().mockResolvedValue(undefined),
-  stopReplication: jest.fn().mockResolvedValue(undefined),
-  getReplicationState: jest.fn().mockReturnValue(undefined),
+jest.mock('./src/lib/instant', () => ({
+  db: {
+    useAuth: jest.fn().mockReturnValue({ isLoading: false, user: null, error: null }),
+    useQuery: jest.fn().mockReturnValue({ isLoading: false, data: null }),
+    transact: jest.fn(),
+    tx: new Proxy({}, { get: () => new Proxy({}, { get: () => () => ({}) }) }),
+    auth: {
+      sendMagicCode: jest.fn().mockResolvedValue(undefined),
+      signInWithMagicCode: jest.fn().mockResolvedValue(undefined),
+      signOut: jest.fn().mockResolvedValue(undefined),
+    },
+  },
+  id: jest.fn().mockReturnValue('mock-id'),
 }));
 
 if (typeof global.structuredClone === 'undefined') {

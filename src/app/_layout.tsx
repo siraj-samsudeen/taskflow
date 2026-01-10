@@ -3,30 +3,23 @@ import { useEffect } from 'react';
 import Toast from 'react-native-toast-message';
 
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
-import { RxDBProvider } from '../contexts/RxDBContext';
 
 function RootLayoutNav() {
-  const { session, isLoading, authEvent } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
 
   useEffect(() => {
-    if (authEvent === 'PASSWORD_RECOVERY') {
-      router.replace('/(auth)/password-reset-confirm');
-      return;
-    }
-
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const isResetPassword = (segments as string[])[1] === 'password-reset-confirm';
 
-    if (session && inAuthGroup && !isResetPassword) {
+    if (user && inAuthGroup) {
       router.replace('/');
-    } else if (!session && !inAuthGroup) {
+    } else if (!user && !inAuthGroup) {
       router.replace('/(auth)/login');
     }
-  }, [session, segments, isLoading, authEvent, router]);
+  }, [user, segments, isLoading, router]);
 
   return (
     <>
@@ -39,9 +32,7 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <RxDBProvider>
-        <RootLayoutNav />
-      </RxDBProvider>
+      <RootLayoutNav />
     </AuthProvider>
   );
 }

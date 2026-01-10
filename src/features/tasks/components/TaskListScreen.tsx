@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useRxDBContext } from '../../../contexts/RxDBContext';
-import type { TaskDoc } from '../../../lib/rxdb-schema';
+import { db, id } from '../../../lib/instant';
 import { TaskItem } from './TaskItem';
 
 type FilterTab = 'all' | 'active' | 'done';
@@ -10,42 +9,26 @@ interface DisplayTask {
   id: string;
   title: string;
   done: boolean;
-  created_at: string;
-}
-
-function toDisplayTask(doc: TaskDoc): DisplayTask {
-  return {
-    id: doc.id,
-    title: doc.title,
-    done: doc.status === 'done',
-    created_at: doc.created_at,
-  };
+  createdAt: number;
 }
 
 export function TaskListScreen() {
-  const { db, isReady } = useRxDBContext();
-  const [tasks, setTasks] = useState<DisplayTask[]>([]);
+  const { isLoading, data } = db.useQuery({ tasks: {} });
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('active');
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!db || !isReady) return;
-
-    const subscription = db.tasks
-      .find({
-        selector: { isDeleted: false },
-      })
-      .$.subscribe((docs) => {
-        setTasks(docs.map((d) => toDisplayTask(d.toJSON())));
-      });
-
-    return () => subscription.unsubscribe();
-  }, [db, isReady]);
+  const tasks: DisplayTask[] = useMemo(() => {
+    return (data?.tasks ?? []).map((t) => ({
+      id: t.id,
+      title: t.title,
+      done: t.done,
+      createdAt: t.createdAt,
+    }));
+  }, [data?.tasks]);
 
   const { activeTasks, doneTasks } = useMemo(() => {
-    const sortByNewest = (a: DisplayTask, b: DisplayTask) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    const sortByNewest = (a: DisplayTask, b: DisplayTask) => b.createdAt - a.createdAt;
     return {
       activeTasks: tasks.filter((t) => !t.done).sort(sortByNewest),
       doneTasks: tasks.filter((t) => t.done).sort(sortByNewest),
@@ -58,73 +41,60 @@ export function TaskListScreen() {
     return [...activeTasks, ...doneTasks];
   }, [activeTab, activeTasks, doneTasks]);
 
-  const handleToggleDone = async (id: string) => {
-    if (!db) return;
-    const doc = await db.tasks.findOne(id).exec();
-    if (doc) {
-      await doc.patch({
-        status: doc.status === 'done' ? 'todo' : 'done',
-        updated_at: new Date().toISOString(),
-        modifiedAt: new Date().toISOString(),
-      });
+  const handleToggleDone = async (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (task) {
+      db.transact(
+        db.tx.tasks[taskId].update({
+          done: !task.done,
+          updatedAt: Date.now(),
+        })
+      );
     }
   };
 
   const handleAddTask = async () => {
     const trimmedTitle = newTaskTitle.trim();
-    if (!trimmedTitle || !db) return;
+    if (!trimmedTitle) return;
 
-    const now = new Date().toISOString();
-    await db.tasks.insert({
-      id: crypto.randomUUID(),
-      title: trimmedTitle,
-      description: null,
-      status: 'todo',
-      priority: 'medium',
-      project_id: null,
-      due_date: null,
-      assigned_to: null,
-      created_at: now,
-      updated_at: now,
-      isDeleted: false,
-      modifiedAt: now,
-    });
+    const now = Date.now();
+    db.transact(
+      db.tx.tasks[id()].update({
+        title: trimmedTitle,
+        description: '',
+        done: false,
+        priority: 'medium',
+        createdAt: now,
+        updatedAt: now,
+      })
+    );
 
     setNewTaskTitle('');
   };
 
-  const handleStartEdit = (id: string) => {
-    setEditingTaskId(id);
+  const handleStartEdit = (taskId: string) => {
+    setEditingTaskId(taskId);
   };
 
-  const handleSaveEdit = async (id: string, newTitle: string) => {
+  const handleSaveEdit = async (taskId: string, newTitle: string) => {
     const trimmed = newTitle.trim();
-    if (trimmed && db) {
-      const doc = await db.tasks.findOne(id).exec();
-      if (doc) {
-        await doc.patch({
+    if (trimmed) {
+      db.transact(
+        db.tx.tasks[taskId].update({
           title: trimmed,
-          updated_at: new Date().toISOString(),
-          modifiedAt: new Date().toISOString(),
-        });
-      }
+          updatedAt: Date.now(),
+        })
+      );
     }
     setEditingTaskId(null);
   };
 
-  const handleDeleteTask = async (id: string) => {
-    if (!db) return;
-    const doc = await db.tasks.findOne(id).exec();
-    if (doc) {
-      await doc.patch({
-        isDeleted: true,
-        modifiedAt: new Date().toISOString(),
-      });
-    }
+  const handleDeleteTask = async (taskId: string) => {
+    db.transact(db.tx.tasks[taskId].delete());
     setEditingTaskId(null);
   };
 
-  if (!isReady) {
+  if (isLoading) {
     return (
       <View style={styles.container}>
         <Text>Loading...</Text>
@@ -187,7 +157,7 @@ export function TaskListScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TaskItem
-            task={item}
+            task={{ id: item.id, title: item.title, done: item.done, created_at: String(item.createdAt) }}
             isEditing={editingTaskId === item.id}
             onToggleDone={handleToggleDone}
             onStartEdit={handleStartEdit}

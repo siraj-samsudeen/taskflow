@@ -1,22 +1,10 @@
-import type { User } from '@supabase/supabase-js';
-import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../contexts/AuthContext';
 import { TaskListScreen } from '../features/tasks';
-import { supabase } from '../lib/supabase';
 
 export default function HomeScreen() {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-    });
-  }, []);
-
-  const handleLogout = () => {
-    supabase.auth.signOut();
-  };
+  const { user, logout } = useAuth();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -25,7 +13,7 @@ export default function HomeScreen() {
           <Text style={styles.headerTitle}>Tasks</Text>
           {user?.email && <Text style={styles.userEmail}>{user.email}</Text>}
         </View>
-        <TouchableOpacity onPress={handleLogout}>
+        <TouchableOpacity onPress={logout}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>

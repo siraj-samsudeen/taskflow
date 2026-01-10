@@ -1,55 +1,50 @@
-import type { AuthChangeEvent, AuthError, Session, User } from '@supabase/supabase-js';
-import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, type ReactNode, useContext } from 'react';
+import { db } from '../lib/instant';
 
-import { supabase } from '../lib/supabase';
+type User = {
+  id: string;
+  email: string;
+};
 
 type AuthContextType = {
   isLoading: boolean;
-  session: Session | null;
   user: User | null;
-  authEvent: AuthChangeEvent | null;
-  login: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signup: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  error: { message: string } | null;
+  sendMagicCode: (email: string) => Promise<void>;
+  verifyMagicCode: (email: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [session, setSession] = useState<Session | null>(null);
-  const [authEvent, setAuthEvent] = useState<AuthChangeEvent | null>(null);
+  const { isLoading, user, error } = db.useAuth();
 
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setAuthEvent(event);
-      setSession(session);
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const user = session?.user ?? null;
-
-  const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+  const sendMagicCode = async (email: string) => {
+    await db.auth.sendMagicCode({ email });
   };
 
-  const signup = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    return { error };
+  const verifyMagicCode = async (email: string, code: string) => {
+    await db.auth.signInWithMagicCode({ email, code });
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    await db.auth.signOut();
   };
 
+  const contextUser = user && user.email ? { id: user.id, email: user.email } : null;
+
   return (
-    <AuthContext.Provider value={{ isLoading, session, user, authEvent, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{
+        isLoading,
+        user: contextUser,
+        error: error ? { message: error.message } : null,
+        sendMagicCode,
+        verifyMagicCode,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

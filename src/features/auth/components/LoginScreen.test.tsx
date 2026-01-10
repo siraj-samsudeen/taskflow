@@ -1,82 +1,100 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
-import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
-import { submitLoginForm } from '../../../../__tests__/utils/form-helpers';
 import { useAuth } from '../../../contexts/AuthContext';
 import { LoginScreen } from './LoginScreen';
-
-jest.mock('expo-router', () => ({
-  useRouter: jest.fn(),
-}));
 
 jest.mock('../../../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 
 describe('LoginScreen', () => {
-  const mockPush = jest.fn();
-  const mockLogin = jest.fn();
+  const mockSendMagicCode = jest.fn();
+  const mockVerifyMagicCode = jest.fn();
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.mocked(useRouter).mockReturnValue({ push: mockPush } as any);
-    jest.mocked(useAuth).mockReturnValue({ login: mockLogin } as any);
+    jest.mocked(useAuth).mockReturnValue({
+      sendMagicCode: mockSendMagicCode,
+      verifyMagicCode: mockVerifyMagicCode,
+    } as any);
   });
 
-  describe('validation', () => {
-    it('shows inline validation errors on invalid submit', async () => {
+  describe('email step', () => {
+    it('shows validation error for empty email', async () => {
       const user = userEvent.setup();
       render(<LoginScreen />);
 
-      await user.press(screen.getByText('Login'));
+      await user.press(screen.getByText('Send Magic Code'));
 
       expect(screen.getByText('Please enter a valid email')).toBeTruthy();
     });
-  });
 
-  describe('submission', () => {
-    it('calls login with credentials', async () => {
-      mockLogin.mockResolvedValue({ error: null });
-
+    it('sends magic code on valid email submission', async () => {
+      mockSendMagicCode.mockResolvedValue(undefined);
+      const user = userEvent.setup();
       render(<LoginScreen />);
-      await submitLoginForm('test@example.com', 'password123');
 
-      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
+      await user.type(screen.getByPlaceholderText('Email'), 'test@example.com');
+      await user.press(screen.getByText('Send Magic Code'));
+
+      expect(mockSendMagicCode).toHaveBeenCalledWith('test@example.com');
     });
 
-    it('shows error toast on invalid credentials', async () => {
-      mockLogin.mockResolvedValue({
-        error: { message: 'Invalid credentials' },
-      });
-
+    it('shows success toast after sending code', async () => {
+      mockSendMagicCode.mockResolvedValue(undefined);
+      const user = userEvent.setup();
       render(<LoginScreen />);
-      await submitLoginForm('test@example.com', 'wrongpassword');
+
+      await user.type(screen.getByPlaceholderText('Email'), 'test@example.com');
+      await user.press(screen.getByText('Send Magic Code'));
 
       expect(Toast.show).toHaveBeenCalledWith({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Invalid credentials',
+        type: 'success',
+        text1: 'Code sent',
+        text2: 'Check your email for the magic code.',
       });
     });
   });
 
-  describe('navigation', () => {
-    it('navigates to register screen when register link is pressed', async () => {
+  describe('code verification step', () => {
+    it('shows code input after sending email', async () => {
+      mockSendMagicCode.mockResolvedValue(undefined);
       const user = userEvent.setup();
       render(<LoginScreen />);
 
-      await user.press(screen.getByText('Register'));
+      await user.type(screen.getByPlaceholderText('Email'), 'test@example.com');
+      await user.press(screen.getByText('Send Magic Code'));
 
-      expect(mockPush).toHaveBeenCalledWith('/(auth)/register');
+      expect(screen.getByText('Enter Code')).toBeTruthy();
+      expect(screen.getByText('We sent a code to test@example.com')).toBeTruthy();
     });
 
-    it('navigates to forgot password screen when link pressed', async () => {
+    it('verifies magic code on submit', async () => {
+      mockSendMagicCode.mockResolvedValue(undefined);
+      mockVerifyMagicCode.mockResolvedValue(undefined);
       const user = userEvent.setup();
       render(<LoginScreen />);
 
-      await user.press(screen.getByText('Forgot Password?'));
+      await user.type(screen.getByPlaceholderText('Email'), 'test@example.com');
+      await user.press(screen.getByText('Send Magic Code'));
 
-      expect(mockPush).toHaveBeenCalledWith('/(auth)/password-reset-request');
+      await user.type(screen.getByPlaceholderText('Enter code'), '123456');
+      await user.press(screen.getByText('Verify'));
+
+      expect(mockVerifyMagicCode).toHaveBeenCalledWith('test@example.com', '123456');
+    });
+
+    it('allows user to change email', async () => {
+      mockSendMagicCode.mockResolvedValue(undefined);
+      const user = userEvent.setup();
+      render(<LoginScreen />);
+
+      await user.type(screen.getByPlaceholderText('Email'), 'test@example.com');
+      await user.press(screen.getByText('Send Magic Code'));
+
+      await user.press(screen.getByText('Use different email'));
+
+      expect(screen.getByPlaceholderText('Email')).toBeTruthy();
     });
   });
 });

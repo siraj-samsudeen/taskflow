@@ -3,7 +3,7 @@
 Todo/project management app for a 2-person dev team managing tasks across clients.
 
 ## Stack
-Expo (React Native) + Supabase + PowerSync (offline-first sync)
+Expo (React Native) + InstantDB (auth & real-time sync)
 
 ## Structure
 
@@ -15,7 +15,7 @@ src/app/           - Expo Router (thin route files only)
 src/features/      - Domain logic: auth/, clients/, projects/, tasks/
 src/components/ui/ - Shared UI primitives
 src/contexts/      - React contexts (AuthContext)
-src/lib/           - supabase.ts, powersync.ts, schema.ts
+src/lib/           - instant.ts, schema.ts
 src/types/         - TypeScript types
 
 __tests__/contracts/ - System invariants (human-owned)
@@ -26,7 +26,7 @@ __tests__/utils/     - Shared test utilities
 
 - **Feature modules**: Each entity has `schemas/`, `api/`, `hooks/`, `components/`
 - **Colocated tests**: `ClientForm.tsx` → `ClientForm.test.tsx` (same folder)
-- **Repository layer**: Screens never import supabase/powersync directly
+- **Repository layer**: Screens never import db/instant directly
 - **Thin routes**: `src/app/` delegates to `src/features/` components
 
 ### Adding a New Entity

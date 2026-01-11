@@ -8,7 +8,7 @@ type CustomTextInput = {
   name: string;
 } & ComponentProps<typeof TextInput>;
 
-export default function CustomTextInput({
+export function CustomTextInput({
   label,
   containerStyle,
   name,

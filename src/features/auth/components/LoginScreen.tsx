@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { FormProvider } from 'react-hook-form';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { z } from 'zod';
 
+import { AppButton, AppText, AppTextInput, colors, spacing } from '../../../components/ui';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useZodForm } from '../../shared/form/useZodForm';
 
@@ -12,24 +13,16 @@ const emailSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email' }),
 });
 
-const codeSchema = z.object({
-  code: z.string().min(1, { message: 'Please enter the code' }),
-});
-
 type EmailFormValues = z.infer<typeof emailSchema>;
-type CodeFormValues = z.infer<typeof codeSchema>;
 
 export function LoginScreen() {
   const { sendMagicCode, verifyMagicCode } = useAuth();
   const [sentToEmail, setSentToEmail] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [codeValue, setCodeValue] = useState('');
 
   const emailMethods = useZodForm(emailSchema, {
     defaultValues: { email: '' },
-  });
-
-  const codeMethods = useZodForm(codeSchema, {
-    defaultValues: { code: '' },
   });
 
   const handleSendCode = async (data: EmailFormValues) => {
@@ -53,11 +46,20 @@ export function LoginScreen() {
     }
   };
 
-  const handleVerifyCode = async (data: CodeFormValues) => {
+  const handleVerifyCode = async () => {
     if (!sentToEmail) return;
+    const code = codeValue.trim();
+    if (!code) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please enter the code',
+      });
+      return;
+    }
     setIsLoading(true);
     try {
-      await verifyMagicCode(sentToEmail, data.code.trim());
+      await verifyMagicCode(sentToEmail, code);
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -71,62 +73,59 @@ export function LoginScreen() {
 
   if (sentToEmail) {
     return (
-      <FormProvider {...codeMethods}>
-        <View style={styles.container}>
-          <Text style={styles.title}>Enter Code</Text>
-          <Text style={styles.subtitle}>We sent a code to {sentToEmail}</Text>
-          <TextInput
-            style={styles.input}
+      <View style={styles.container}>
+          <AppText variant="heading1" style={styles.title}>
+            Enter Code
+          </AppText>
+          <AppText variant="body" color={colors.gray600} style={styles.subtitle}>
+            We sent a code to {sentToEmail}
+          </AppText>
+          <AppTextInput
             placeholder="Enter code"
-            placeholderTextColor="#999"
-            value={codeMethods.watch('code')}
-            onChangeText={(text) => codeMethods.setValue('code', text)}
+            value={codeValue}
+            onChangeText={setCodeValue}
             keyboardType="number-pad"
             autoComplete="one-time-code"
+            containerStyle={styles.inputContainer}
           />
-          {codeMethods.formState.errors.code && (
-            <Text style={styles.error}>{codeMethods.formState.errors.code.message}</Text>
-          )}
-          <TouchableOpacity
+          <AppButton
+            label={isLoading ? 'Verifying...' : 'Verify'}
+            onPress={handleVerifyCode}
+            loading={isLoading}
             style={styles.button}
-            onPress={codeMethods.handleSubmit(handleVerifyCode)}
-            disabled={isLoading}
-          >
-            <Text style={styles.buttonText}>{isLoading ? 'Verifying...' : 'Verify'}</Text>
-          </TouchableOpacity>
+          />
           <TouchableOpacity style={styles.linkContainer} onPress={() => setSentToEmail(null)}>
-            <Text style={styles.linkText}>Use different email</Text>
+            <AppText variant="bodySemibold" color={colors.primary}>
+              Use different email
+            </AppText>
           </TouchableOpacity>
         </View>
-      </FormProvider>
     );
   }
 
   return (
     <FormProvider {...emailMethods}>
       <View style={styles.container}>
-        <Text style={styles.title}>TaskFlow</Text>
-        <Text style={styles.subtitle}>Enter your email to sign in</Text>
-        <TextInput
-          style={styles.input}
+        <AppText variant="heading1" style={styles.title}>
+          TaskFlow
+        </AppText>
+        <AppText variant="body" color={colors.gray600} style={styles.subtitle}>
+          Enter your email to sign in
+        </AppText>
+        <AppTextInput
           placeholder="Email"
-          placeholderTextColor="#999"
-          value={emailMethods.watch('email')}
-          onChangeText={(text) => emailMethods.setValue('email', text)}
+          name="email"
           autoCapitalize="none"
           keyboardType="email-address"
           autoComplete="email"
+          containerStyle={styles.inputContainer}
         />
-        {emailMethods.formState.errors.email && (
-          <Text style={styles.error}>{emailMethods.formState.errors.email.message}</Text>
-        )}
-        <TouchableOpacity
+        <AppButton
+          label={isLoading ? 'Sending...' : 'Send Magic Code'}
+          onPress={() => emailMethods.handleSubmit(handleSendCode)()}
+          loading={isLoading}
           style={styles.button}
-          onPress={emailMethods.handleSubmit(handleSendCode)}
-          disabled={isLoading}
-        >
-          <Text style={styles.buttonText}>{isLoading ? 'Sending...' : 'Send Magic Code'}</Text>
-        </TouchableOpacity>
+        />
       </View>
     </FormProvider>
   );
@@ -137,51 +136,22 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: spacing.xl,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 24,
+    marginBottom: spacing.xxl,
   },
-  input: {
+  inputContainer: {
     width: '80%',
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    color: '#000',
-  },
-  error: {
-    color: '#FF3B30',
-    fontSize: 12,
-    marginTop: 4,
-    width: '80%',
+    marginBottom: spacing.lg,
   },
   button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
     width: '80%',
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
   },
   linkContainer: {
-    marginTop: 15,
-  },
-  linkText: {
-    color: '#007AFF',
-    fontWeight: '600',
-    textDecorationLine: 'underline',
+    marginTop: spacing.lg,
   },
 });

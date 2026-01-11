@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import type { Task } from '../../../types';
 
@@ -11,7 +11,7 @@ interface TaskItemProps {
   onDelete?: (id: string) => void;
 }
 
-export function TaskItem({
+function TaskItemComponent({
   task,
   isEditing = false,
   onToggleDone,
@@ -92,6 +92,8 @@ export function TaskItem({
     </TouchableOpacity>
   );
 }
+
+export const TaskItem = memo(TaskItemComponent);
 
 const styles = StyleSheet.create({
   container: {

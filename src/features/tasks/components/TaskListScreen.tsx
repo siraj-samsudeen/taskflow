@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { db, id } from '../../../lib/instant';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { AppButton, AppText, AppTextInput, colors, spacing } from '../../../components/ui';
+import { db } from '../../../lib/instant';
+import { taskRepository } from '../api/taskRepository';
 import { TaskItem } from './TaskItem';
 
 type FilterTab = 'all' | 'active' | 'done';
@@ -44,12 +46,7 @@ export function TaskListScreen() {
   const handleToggleDone = async (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId);
     if (task) {
-      db.transact(
-        db.tx.tasks[taskId].update({
-          done: !task.done,
-          updatedAt: Date.now(),
-        })
-      );
+      await taskRepository.toggleTask(taskId, task.done);
     }
   };
 
@@ -57,18 +54,7 @@ export function TaskListScreen() {
     const trimmedTitle = newTaskTitle.trim();
     if (!trimmedTitle) return;
 
-    const now = Date.now();
-    db.transact(
-      db.tx.tasks[id()].update({
-        title: trimmedTitle,
-        description: '',
-        done: false,
-        priority: 'medium',
-        createdAt: now,
-        updatedAt: now,
-      })
-    );
-
+    await taskRepository.addTask(trimmedTitle);
     setNewTaskTitle('');
   };
 
@@ -77,27 +63,19 @@ export function TaskListScreen() {
   };
 
   const handleSaveEdit = async (taskId: string, newTitle: string) => {
-    const trimmed = newTitle.trim();
-    if (trimmed) {
-      db.transact(
-        db.tx.tasks[taskId].update({
-          title: trimmed,
-          updatedAt: Date.now(),
-        })
-      );
-    }
+    await taskRepository.updateTaskTitle(taskId, newTitle);
     setEditingTaskId(null);
   };
 
   const handleDeleteTask = async (taskId: string) => {
-    db.transact(db.tx.tasks[taskId].delete());
+    await taskRepository.deleteTask(taskId);
     setEditingTaskId(null);
   };
 
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text>Loading...</Text>
+        <AppText>Loading...</AppText>
       </View>
     );
   }
@@ -105,24 +83,21 @@ export function TaskListScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
+        <AppTextInput
           placeholder="Add a new task..."
-          placeholderTextColor="#999"
           value={newTaskTitle}
           onChangeText={setNewTaskTitle}
           onSubmitEditing={handleAddTask}
           returnKeyType="done"
+          style={styles.input}
         />
-        <TouchableOpacity
-          style={[styles.addButton, !newTaskTitle.trim() && styles.addButtonDisabled]}
+        <AppButton
+          label="+"
           onPress={handleAddTask}
           disabled={!newTaskTitle.trim()}
           accessibilityLabel="Add task"
-          accessibilityRole="button"
-        >
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
+          style={styles.addButton}
+        />
       </View>
       <View style={styles.tabContainer}>
         <TouchableOpacity
@@ -131,7 +106,9 @@ export function TaskListScreen() {
           accessibilityRole="tab"
           accessibilityState={{ selected: activeTab === 'all' }}
         >
-          <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>All</Text>
+          <AppText variant="captionMedium" color={activeTab === 'all' ? colors.primary : colors.gray600}>
+            All
+          </AppText>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'active' && styles.tabActive]}
@@ -139,9 +116,9 @@ export function TaskListScreen() {
           accessibilityRole="tab"
           accessibilityState={{ selected: activeTab === 'active' }}
         >
-          <Text style={[styles.tabText, activeTab === 'active' && styles.tabTextActive]}>
+          <AppText variant="captionMedium" color={activeTab === 'active' ? colors.primary : colors.gray600}>
             Active ({activeTasks.length})
-          </Text>
+          </AppText>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'done' && styles.tabActive]}
@@ -149,7 +126,9 @@ export function TaskListScreen() {
           accessibilityRole="tab"
           accessibilityState={{ selected: activeTab === 'done' }}
         >
-          <Text style={[styles.tabText, activeTab === 'done' && styles.tabTextActive]}>Done</Text>
+          <AppText variant="captionMedium" color={activeTab === 'done' ? colors.primary : colors.gray600}>
+            Done
+          </AppText>
         </TouchableOpacity>
       </View>
       <FlatList
@@ -173,65 +152,38 @@ export function TaskListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.gray50,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
-    gap: 8,
+    borderBottomColor: colors.gray100,
+    gap: spacing.sm,
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    color: '#000',
   },
   addButton: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: '600',
-    lineHeight: 26,
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
+    borderBottomColor: colors.gray100,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     alignItems: 'center',
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: '#007AFF',
-  },
-  tabText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  tabTextActive: {
-    color: '#007AFF',
-    fontWeight: '600',
+    borderBottomColor: colors.primary,
   },
 });
